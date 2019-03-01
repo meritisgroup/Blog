@@ -1,36 +1,58 @@
-case class Monad[A]() {
-  type Monadic = (A, String)
+object Monad {
+  /**
+    * Turns a value into a Monad value
+    * @param x the value
+    * @return a Monad of type [A]
+    */
+  def unit[A](x: A) = (x, "")
 
-  def unit(x: A) = (x, "")
+  /**
+    * Turns a function into a Monad function
+    * @param f a function that takes A and returns B
+    * @return a function that returns a Monad of type [B]
+    */
+  def lift[A, B](f: A => B): A => (B, String) = (value: A) => unit(f(value))
 
-  def lift[B](f: B => A): B => Monadic = (value: B) => unit(f(value))
-
-  def bind(f: A => Monadic): Monadic => Monadic = {
-    (value: Monadic) => {
+  /**
+    * Allow a Monad function to be chained with other Monad functions
+    * @param f a function that returns a monad of type [B]
+    * @return a function that takes a Monad of type [A] and return a Monad of type [B]
+    */
+  def bind[A, B](f: A => (B, String)): ((A, String)) => (B, String) = {
+    (value: (A, String)) => {
       val (newVal, log) = f(value._1)
       (newVal, log + value._2)
     }
   }
 
-  def compose[B, C](f: C => Monadic, g: B => C) = (value: B) => f(g(value))
+  /**
+    * Chain two functions together
+    * @param g call on value
+    * @param f call on (g(value))
+    * @return
+    */
+  def compose[A, B, C](g: A => B, f: B => C) = (value: A) => f(g(value))
 }
 
-def add2(x: Int) = x + 2
+// we define some functions that will compose our chain, some of them need to be debuggable
 
-// we create our monad
-val monad = Monad[Int]()
+def add2(value:Int) = value+2
+def intToString(value:Int) = (value.toString, "intToString called. ")
+def stringToInt(value:String) = value.toInt
+def add5(value: Int) = (value+5, "add5 called. ")
+def identityDebug(value:Int) = (value, "identityDebug called. ")
 
-// we make our function return a monad
-val lifted = monad.lift(add2)
+import Monad._
 
-// we make this new functions take a monad as input
-val bound = monad.bind(lifted)
+// we bind the functions to make them composable
+// the functions that do not return a log are lifted as well to return an empty log
+val add2_ = bind(lift(add2))
+val intToString_ = bind(intToString)
+val stringToInt_ = bind(lift(stringToInt))
+val add5_ = bind(add5)
+val identityDebug_ = bind(identityDebug)
 
-// we compose the two functions
-val f = monad.compose(bound, bound)
+val f = compose(unit[Int], compose(compose(compose(compose(add2_, intToString_), stringToInt_), add5_), identityDebug_))
 
-// now we could call it this way
-f(monad.unit(3)) // returns 7
+f(3) // (10,"identityDebug called. add5 called. intToString called. ")
 
-// or even this way, since unit is also composable
-monad.compose(f, monad.unit)(3) // returns 7
