@@ -12,3 +12,10 @@ def multiply(n:Int)(value:Int) = {
 }
 
 Writer(5).map(_*3).flatMap(multiply(3))
+
+// another example
+Writer(5)
+  .map(_*3)
+  .flatMap(x => Writer(x*3, "mutlipled by 3."))
+  .flatMap(x => Writer(x+2, "added 2."))
+  .flatMap(x => Writer(x.toString, "turned into a String."))
