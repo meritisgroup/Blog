@@ -14,7 +14,7 @@ object Monad {
   def lift[A, B](f: A => B): A => (B, String) = (value: A) => unit(f(value))
 
   /**
-    * Allow a Monad function to be chained with other Monad functions
+    * Allows a Monad function to be chained with other Monad functions
     * @param f a function that returns a monad of type [B]
     * @return a function that takes a Monad of type [A] and return a Monad of type [B]
     */
@@ -29,7 +29,7 @@ object Monad {
     * Chain two functions together
     * @param g call on value
     * @param f call on (g(value))
-    * @return
+    * @return f(g(value))
     */
   def compose[A, B, C](g: A => B, f: B => C) = (value: A) => f(g(value))
 }
