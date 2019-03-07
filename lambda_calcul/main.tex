@@ -1,0 +1,52 @@
+% !TeX encoding = UTF-8
+\documentclass[12pt, a4paper]{article}
+\usepackage{amsmath,amsthm,amssymb,amsfonts,bm}
+\usepackage[utf8x]{inputenc}
+\usepackage{hyperref}
+\usepackage[mathscr]{eucal}
+\usepackage{eufrak}
+\usepackage{mathrsfs}
+\usepackage{listings}
+\usepackage{fancyvrb}
+%\pagestyle{empty}
+\DeclareMathAlphabet{\mathpzc}{OT1}{pzc}{m}{it}
+\newcommand{\lft}{\leftarrow}
+\newcommand{\rgt}{\rightarrow}
+\newcommand{\cK}{\mathbf{K}}
+\newcommand{\cS}{\mathbf{S}}
+\newcommand{\cI}{\mathbf{I}}
+\newcommand{\id}{\mathbf{id}}
+\newcommand{\lx}{\lambda x}
+\newcommand{\ly}{\lambda y}
+\newcommand{\lf}{\lambda f}
+\newcommand{\lif}{\mathbf{if}}
+\newcommand{\tru}{\mathbf{tru}}
+\newcommand{\fls}{\mathbf{fls}}
+\newcommand{\suc}{\mathbf{succ}}
+\newcommand{\pred}{\mathbf{pred}}
+\newcommand{\bequiv}{\equiv_\beta}
+%\newtheorem{problem}{Problème}
+\newtheorem*{problem}{Problème}
+\newtheorem*{remark}{Remarque}
+\newtheorem*{example}{Example}
+\newtheorem*{definition}{Définition}
+\newtheorem*{theorem}{Théorème}
+
+\VerbatimFootnotes
+
+\begin{document}
+	
+\section*{Introduction}
+L'objectif initial de la première partie était de discuter autour de la définition d'une théorie mathématique correcte en prenant l'arithmétique comme exemple. Cette tentative s'est vite transformée en un essai sur l'histoire des mathématiques de la fin du XIX\textsuperscript{ème} jusqu'au milieu du XX\textsuperscript{ème} siècle, en se concentrant principalement sur les problèmes de consistance et notamment sur le deuxième problème de Hilbert.
+
+Il est évident que notre approche ne peut être considérée comme complète, on s'est restreint au contexte historique des progrès concernant la formalisation de l'arithmétique ainsi que la notion de calculabilité. Intentionellement, on a évité au maximum les définitions formelles. On invite plutôt le lecteur curieux à faire ses propres recherches en partant de Wikipédia (plutôt la version anglaise) qui contient la plupart des définitions manquantes.
+
+A l'opposé, l'objectif de la deuxième partie était de donner au lecteur le goût du $\lambda$-calcul : on présente une définition plutôt complète, puis on montre comment construire un language de programmation élémentaire mais aussi puissant que la machine de Turing. Ce langage est connu comme le paradigme fonctionnel.
+
+De fait, les deux parties de ce document sont indépendantes. Cependant, il est conseillé de commencer par un passage ``diagonale'' sur la partie 2, puis une lecture complète de la partie 1 et enfin la relecture de la partie 2 pendant lequelle on pourra faire attention au sens global derrière la forêt de détails techniques nécessaire pour introduire un système formel tel que le $\lambda$-calcul.
+	
+\include{part1}
+
+\include{part2}
+
+\end{document}
