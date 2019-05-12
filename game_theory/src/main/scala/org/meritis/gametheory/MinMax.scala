@@ -2,29 +2,34 @@ package org.meritis.gametheory
 
 import scala.util.Random
 
-// N is the type of a node
 trait MinMax[Node] {
 
 	def eval(node: Node): Double
 
-	def children(node: Node): Seq[Node]
+	def children(node: Node, maximize: Boolean): Seq[Node]
 
-	def findBestNode(initial: Node, depth: Int, maximize: Boolean = true): (Node, Double) = {
+	def initialDepth: Int = 10
+
+	def findBestNode(initialNode: Node): (Node, Double) = findBestNodeMinMax(initialNode, initialDepth, true)
+
+	def findBestNode(initialNode: Node, depth: Int): (Node, Double) = findBestNodeMinMax(initialNode, depth, true)
+
+	def findBestNodeMinMax(node: Node, depth: Int, maximize: Boolean): (Node, Double) = {
 		if (depth == 0) {
 			// If we reached the initial depth, just evaluate the node
-			(initial, eval(initial))
+			(node, eval(node))
 
 		} else {
-			val nodeChildren = children(initial)
+			val nodeChildren = children(node, maximize)
 
 			if (nodeChildren.isEmpty) {
 				// If the node has no children, evaluation is accurate
-				(initial, eval(initial))
+				(node, eval(node))
 
 			} else {
 				// Find related score for all children
 				val childrenWithEval = for (child <- nodeChildren)
-										yield (child, findBestNode(child, depth - 1, !maximize)._2)
+										yield (child, findBestNodeMinMax(child, depth - 1, !maximize)._2)
 
 				// Find the best score of all children
 				val bestEval = if (maximize) childrenWithEval.maxBy(_._2)
