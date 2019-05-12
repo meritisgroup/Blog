@@ -1,9 +1,11 @@
 \section*{Partie 2. Les formalités}
 
-\subsection*{Impérative contre fonctionnelle}
-Le concepte de langage de programmation le plus elémentaire connu par tout le monde est un machine de Turing.
-Sa ruban contenant les instructions et les datas se traduit facilement dans la programmation impérative -- un paradigme implémenté par ``over 9000'' des langages populaires.
-Dans ce paradigme, le proces du calcul est décrit en termes des instructions qui changent l'état de ``calculateur''.
+\subsection*{Impératif contre fonctionnel}
+Une fois dit ``ordinateur'', je pense de la machine de Turing et à l'envers : si vous dites ``machine de Turing'' j'imagine tout de suit un PC.
+Pas de surprise, c'est un concepte de langage de programmation ou de l'ordinateur le plus elémentaire -- tellement élementaire que la notion ``ordinateur'' et ``langage de programmation'' n'ont pas la différence.
+La machine de Turing est un ruban contenant les instructions et les datas et un automaton que le lit, efface, réecrit et déplace.
+Tout ensemble elle se traduit facilement dans un programme impératif -- un paradigme implémenté par ``over 9000'' des langages populaires.
+Dans ce paradigme, le processus du calcul est décrit en termes des instructions qui changent l'état de ``calculateur''.
 Les caractéristiques des programmes impératifs sont :
 \begin{itemize}
 	\item L'état se change par des instruction de l'affectation (\verb|v = E|).
@@ -18,15 +20,15 @@ Exemple (le calcul d'un factoriel impératif):
   for i = 1..n:
       res = res * i;
 \end{lstlisting}
-On voit clairement que ce programme est imperative car il est composé de instructions consecutives qui translatent le calculateur de l'état initial à son état final.
-Une partie de l'état final (variable \verb|res|) est interprété comme un résultat du calcul.
+On voit clairement que ce programme est imperatif car il est composé de instructions consecutives qui translatent l'executeur de l'état initial à son état final.
+Une partie de l'état final (variable \verb|res|) est interprétée comme un résultat du calcul.
 
-C'est un programme le plus compliqué de cet article.
-Pourriez-vous de proposer un machine de Turing qui calcul un factoriel ?
-Cela semble technique, mais possible (\href{https://math.stackexchange.com/questions/1153376/construct-a-turing-machine-for-factorialunary}{stackexchange}, \href{https://youtu.be/h77-wb44Uvg}{vidéo sur youtube}).
-Si vous l'avez jamais fait à la main -- essayez, c'est amusant~!\footnote{et permet de mieux comprendre le concept impératif\ldots}
+Ce programme est très simple, mais pourriez-vous de proposer un machine de Turing qui calcul un factoriel ?
+Si vous l'avez jamais fait à la main -- amusez-vous, c'est un bon éxo de gymnastique mentale.
+\footnote{Si vous preferez de \href{https://math.stackexchange.com/questions/1153376/construct-a-turing-machine-for-factorialunary}{lire} ou \href{https://youtu.be/h77-wb44Uvg}{regarder} comment les autres réalisent ce type de perversions mathématiques on ne vous jugera pas.}
 
-En parallèle de l'approche programme comme l'instruction, il existe une paradigme fonctionnel qui présente un programme comme une fonction.
+Dans tout cas, l'objectif de cet article est en dehors de paradigme impératif -- on s'intéresse au paradigme fonctionnel qui présente un programme comme une fonction au lieu d'une liste des instructions consécutifs à executer.
+%Dans un certain sens, on remplace l'ordre de l'execution par la composition entre foncitons?!!
 Par example, le factoriel est une expression qui depende de l'entrée \verb|n|.
 L'execution de ce programme est une suite de réduction de cette expression jusqu'à l'expression triviale qui ne contient que le résultat.
 De plus,
@@ -338,7 +340,7 @@ $$\suc = \lambda n. \lambda s. \lambda z. \; s \; (n \; s \; z)$$
 	\[
 		\ldots = \lambda s. \lambda z. \; s \; ([\lambda s'. \lambda z'. \underbrace{s' \; (s' \; \ldots (s'}_{n\text{ fois}} \; z') \ldots )] \; s \; z)
 	\]
-	Remarqu'ons que pour évité l'ambuiguïté, on a remplacé $s$ et $z$ par $s'$ et $z'$ dans la définition de $\mathbf{\overline{n}}$ car ces variables sont liées par abstraction -- $\alpha$-équivalence nous autorise à le faire.
+	Remarquons que pour évité l'ambuiguïté, on a remplacé $s$ et $z$ par $s'$ et $z'$ dans la définition de $\mathbf{\overline{n}}$ car ces variables sont liées par abstraction -- $\alpha$-équivalence nous autorise à le faire.
 	Puis, si on applique la $\beta$-réduction aux $\lambda s'$ et $\lambda z'$, on obtient
 	\[
 		\ldots 
@@ -429,11 +431,11 @@ Considerons un terme suivant~:
 $$(\lambda x.x) \; ((\lambda x.x) \; (\lambda z. \; (\lambda x.x) z))$$
 Pour simplicité on peut le réécrire~:
 $$\id \; (\id \; (\lambda z. \; \id \; z))$$
-Ce terme-là contient 3 redexes. Nous n'avons plusieurs choix de l'ordre des réductions :
+Ce terme-là contient 3 redexes. Nous n'avons plusieurs choix de l'ordre des réductions~:
 \begin{itemize}
 	\item \textbf{$\beta$-réduction complète.}
-		Le redex est choisi au hazard à chaque étape. Il est facile de voir que si l'expression initiale est finie, le résultat ne dépends pas de l'ordre de calcul (rappelons qu'il n y a pas de notion d'état, donc les effets de bord sont impossibles).
-		Voici une des réductions possibles d'une expression ci-dessus :
+		Le redex est choisi au hazard à chaque étape. Il est facile de voir que si l'expression initiale est finie, le résultat ne dépends pas de l'ordre de calcul (rappelons qu'il n'y a pas de notion d'état, donc les effets de bord sont impossibles).
+		Voici une des réductions possibles d'une expression de dessous :
 		\begin{align*}
 			& \id \; (\id \; (\lambda z. \; \underline{\id \; z})) \\
 			= & \; \id \; \underline{(\id \; (\lambda z. \; z))} \\

@@ -1,0 +1,234 @@
+\section*{Partie 3. Logique Combinatoire}
+
+%PLAN - Combinatory logic.
+%
+%TL;DR
+%1) it is a lambda calculus withou lambda
+%2) combinator is a higher-order function
+%3) any combinator is a composition of 3 basic ones (S, K, K)
+%
+%Short history.
+%
+%Definition
+%
+%SKI
+%
+%Code Haskell
+%
+%+ Supercombinator
+%+ Fixed point combinator
+%
+%+ Graph reduction machine
+%
+%Applications
+%- Compilation of functional languages
+%- Logic (i.e., Curry-Howard isomorphism)
+
+\subsection*{TL;DR}
+
+Logique combinatoire est \lam -calcul sans symbole "\lam " :
+\begin{itemize}
+	\item \emph{Combinateur} est un fonction d'ordre supérieur, i.e., une fonction qui ne dépends que de ces paramètres.
+	\item N'importe quel combinateur est une composition de trois combinateurs basiques : $\mathbf{S}, \mathbf{K}, \mathbf{I}$.
+\end{itemize}
+Pourquoi les apprendre ?
+
+\subsection*{Rappel historique}
+
+Imaginez la mathématique sans variables : au lieu de presenter une fonction comme une règle qui mappe $x$ à $y$, on fixe certaines fonctions et présente les autres comme une composition des fonctions de base. Cette idée a été d'abord proposé par Moses Schönfinkel en 1920 dans le cadre de ces travau à l'université de Göttingen dans le groupe de David Hilbert. Il a réussi a montré qu'un système basé sur deux combinateurs basiques ($\mathbf{S}$ et $\mathbf{K}$) est équivalent au calcul des prédicats. Schönfinkel a même prouvé qu'une fonction de deux arguments peut être remplacé par une fonction d'un seul argument. Mais, comme il est arrivé au beaucoup de mathématiciens fondamentaux, il est devenu fou quelques années plus tard et ses résultats risquaient d'être abandonnés. Heureusement, Haskell Curry, un étudiant de Hilbert à la fin des années 1920s, a développé les idées de Schönfinkel et a eu la biographie plus longue que son predecessor : ayant travaillé sur les fondements de mathématiques en générale, il tentait de montrer que la logique combinatoire pouvait fournir un fondement consistent. Il a aussi influencé le \lam -calcul qui (avec la logique combinatoire) sert de base à la programmation fonctionnelle ou il est dévenu l'un des spécialistes principaux. Pendant toute sa vie, il défendait les idées de constructivisme de son tuteur Hilbert.
+Aujourd'hui son nom est portée par trois langage de programmation fonctionnels: Haskell, Brook et Curry.
+La logique combinatoire sert pour la théorie des preuves grâce à isomorphisme de Curry-Howard et, en pratique, dans les certains compilateurs des langages fonctionnels.
+
+\subsection*{Définition}
+
+Comme d'habitude, on parle d'un système formel. Pour définir tel système, nous devons introduire :
+\begin{itemize}
+	\item l'alphabet ;
+	\item les propositions (ensemble de formules corrèctes) ;
+	\item les axiomes ;
+	\item les règles d'inférence.
+\end{itemize}
+
+En logique combinatoire, les termes et contient des objets suivants : constants, variables, termes et symboles spéciales. Les constants et variables sont écrits avec les lettres latins miniscules. D'habitude les premières lettres ($a$, $b$, $c$) sont réservées pour les constants ainsi que les dernières ($x$, $y$, $z$) répresentent les variables. Les termes (ou les formules, ou les expressions) sont notés par lettres majuscules : $M$, $N$. De plus, il y a trois symboles spéciaux : les parantèses "(" et ")" détermine l'ordre de calcul et égalité "=" détermine la rélation d'équivalence, c.-à-d. si un terme peut être transformé en autre.
+Tout ces éléments déterminent \emph{l'alphabet} de la logique combinatoire.
+
+\emph{Les formules corrèctes} ont une forme $\{M = N\}$, où $M$ et $N$ sont les termes combinatoires. Voici une définition constructive (comme il est légué par Curry) des termes combinatoire :
+\begin{itemize}
+	\item Un constant $c$ est un terme combinatoire.
+	\item Un variable $x$ est un terme combinatoire.
+	\item Si $M$ et $N$ sont les termes combinatoire, alors $(M \; N)$ l'est aussi.
+\end{itemize}
+
+\emph{Les axiomes} sont une partie de formules corrèctes. Dans logique combinatoire, on fixe les suivantes :
+\begin{itemize}
+	\item $\mathbf{I} x = x$
+	\item $\mathbf{K} xy = x$
+	\item $\mathbf{S} xyz = xz (yz)$
+\end{itemize}
+
+On dit que les axiomes sont \emph{postulées}, c.-à-d. elles sont posées vraies par définition. Une formule différente des axiomes est vrai, si on arrive à prouver cette formule en partant des axiomes. Dans ce contexte, comme dans \lam -calcul, "prouver une formule" signifie, "obtenir cette formule à partir des axiomes en appliquent \emph{règles d'inférence}". Nous avons cinq règles :
+\begin{itemize}
+	\item $a = a$ (réflexivité) ;
+	\item $(a = b) \to (b = a)$ (symétrie) ;
+	\item $(a = b) \land (b = c) \to (a = c)$ (transitivité) ;
+	\item $(a = b) \to (ca = cb)$ ;
+	\item $(a = b) \to (ac = bc)$.
+\end{itemize}
+
+Remarquons finalement, que nous supprimons la plupart des parantèses en postulant \emph{l'assotiativité gauche} de même façon qu'il était fait pour \lam -calcul.
+
+\subsection*{Exemple de calcul}
+
+Voici un exemple d'une formule corrècte de la logique combinatoire :
+\[\mathbf{I} = \mathbf{SKK}\]
+Cette formule est facile à prouver. Il suffit de montrer que la partie gauche et droite s'applique à une variable $x$ de même façon :
+\begin{enumerate}
+	\item Par définition de $\mathbf{I}$, $\mathbf{I}x = x$.
+	\item Par définition de $\mathbf{S}$ et $\mathbf{K}$, on calcule : $\mathbf{SKK} \; x =_\mathbf{S} K \; x \; (K x) =_\mathbf{K} x$.
+	\item Alors, $\mathbf{I} = \mathbf{SKK}$.
+\end{enumerate}
+
+En fait, la verification de telle formule combinatoire est directe et rélativement facile. Mais comment peut-on la trouver ? C.-à-d., muni d'une définition $\mathbf{I} x \equiv x$, comment peut-on retrouver la répresentation de $\mathbf{I}$ comme une serie de $\mathbf{S}$ et $\mathbf{K}$ ?
+
+Voici une façon de réfléchir qui permet résoudre ce problème (cette idée provient d'une article du journal russe \href{https://ru.wikibooks.org/wiki/\%D0\%9A\%D0\%BE\%D0\%BC\%D0\%B1\%D0\%B8\%D0\%BD\%D0\%B0\%D1\%82\%D0\%BE\%D1\%80\%D1\%8B_\%E2\%80\%94_\%D1\%8D\%D1\%82\%D0\%BE_\%D0\%BF\%D1\%80\%D0\%BE\%D1\%81\%D1\%82\%D0\%BE!}{"Potentiel"}) :
+\begin{itemize}
+	\item Imaginons, que nous avons trouvé une representation. Évidemment, elle commence soit par $\mathbf{K}$, soit par $\mathbf{S}$. Alors, soit $\mathbf{I} = \mathbf{K} M$, soit $\mathbf{I} = \mathbf{S} M N$, où $M$ et $N$ sont les terme encore inconnus.
+	\item Si $\mathbf{I} = \mathbf{K} M$, alors $\mathbf{I} x = \mathbf{K} M x =_\mathbf{K} M$. Donc nous avons perdu $x$, ce que rend cette alternative impossible.
+	\item Donc, $\mathbf{I} = \mathbf{S} M N$. Si on calcul $\mathbf{I} x$, on obtient $\mathbf{S} M N x =_\mathbf{S} M x (N x)$.
+	\item Pour $M$, nous avons aussi deux possibilités simples : $M = \mathbf{K}$ et $M = \mathbf{S}$. Il est facile à voir que la première fait le bouleau, car
+	\[\mathbf{K} x (N x) =_\mathbf{K} x\]
+	\item Comme le cancellator $\mathbf{K}$ "supprime" $N$ de l'expression, ce terme peut être n'importe lequel. Si on pose $N := \mathbf{K}$, on obtient $\mathbf{I = SKK}$.
+\end{itemize}
+
+\textbf{Remarque} : il existe plusieurs répresentations de $I$. Par exemple, ces deux-là sont aussi correctes : $\mathbf{I = SKS}$ ou $\mathbf{I = SK(S(KKSK)K)}$.
+
+\subsection*{Systèmes de combinateurs}
+
+Étant donné un combinateur quelconque, est-il possible de le representer en termes de $\mathbf{S}$, $\mathbf{K}$ et $\mathbf{I}$ ? Est-ce que ce système est indépendent ? Est-ce qu'il y a d'autres systèmes de combinateurs qui peuvent servir de base ?
+
+La réponse pour la première question est \emph{oui}. Ce système ($\mathbf{S}$, $\mathbf{K}$, $\mathbf{I}$) n'est pas indépendant (nous avons démontré ci-dessous que $\mathbf{I = SKK}$), mais pour simplifier les formule, on préfère d'utiliser ce système que système avec seulement deux combinateurs, $\mathbf{S}$ et $\mathbf{K}$. Un autre problème est ce que si on applique la même strategie pour décomposer un combinateur plus compliqué que $\mathbf{I}$, on voit très vite que l'arbre des possibilités s'explose ! Mais la vraie preuve est faite par un process direct et constructif (encore hommage au Haskell Curry), qui s'appele \emph{élimination des abstractions}.
+
+\textbf{Théorème.} Pour un combinateur quelconque $M$, il existe une formule $M = N$ où $N$ ne contient que des $\mathbf{S}$, $\mathbf{K}$ et $\mathbf{I}$.
+
+\textbf{Preuve.}
+\emph{Élimination des abstractions}. C'est une transformation $T[]$ qui prend un \lam -terme (c.-à-d., la définition) et construit son répresentation combinatoire selon les règles suivantes :
+\begin{enumerate}
+	\item $T[x] \implies x$ ;
+	\item $T[(E_1 \; E_2)] \implies (T[E_1] \; T[E_2])$ ;
+	\item $T[\lambda x. E] \implies (\mathbf{K} \; T[E])$, s'il n'y a pas d'occurences libres de $x$ en $E$ ;
+	\item $T[\lambda x. x] \implies \mathbf{I}$ ;
+	\item $T[\lambda x. \lambda y. E] \implies T[\lambda x. T[\lambda y. E]]$, si $x$ se trouve dans $E$ ;
+	\item $T[\lambda x. (E_1 \; E_2)] \implies (\mathbf{S} T[\lambda x. E_1] \; T[\lambda x. E_2])$, si $x$ se trouve en $E_1$ ou $E_2$.
+\end{enumerate}
+L'élimination de l'abstraction peut être appliqué à n'importe quel \lam -terme. De plus, il est facile de voir que ce process se termine, car l'application de chaque règle "simplifie le formule" (argument informel, mais plus simple. Les curieux peuvent chercher un semi-invariant pour le prouver formellement\ldots)
+\\
+\textbf{CQFD}
+
+\textbf{Exemple.} Soit $M x y \equiv y x$. Ce combinateur corréspond à un \lam -terme $\lambda x. \lambda y. (y \; x)$. Voici son répresentation combinatoire (après chaque égalité on indique quelle règle avons-nous appliqué) :
+\[
+T[\lambda x. \lambda y. (y \; x)] =_\text{par 5} T[\lambda x. \; T[\lambda y. (y \; x)]] =_\text{par 6} T[\lambda x. (\mathbf{S} \; T[\lambda y. y] \; T[\lambda y. x])]
+\]
+\[
+=_\text{par 4} T[\lambda x. (\mathbf{S} \; \mathbf{I} \; T[\lambda y. x])] =_\text{par 3} T[\lambda x. (\mathbf{S} \; \mathbf{I} \; (\mathbf{K} \; T[x]))]
+\]
+\[
+=_\text{par 1} T[\lambda x. (\mathbf{S} \; \mathbf{I} \; (\mathbf{K} \; x))] =_\text{par 6} (\mathbf{S} \; T[\lambda x. (\mathbf{S} \; \mathbf{I})] T[\lambda x. (\mathbf{K} \; x)])
+\]
+\[
+=_\text{par 3} (\mathbf{S} \; (\mathbf{K} \; (\mathbf{S} \; \mathbf{I})) T[\lambda x. (\mathbf{K} \; x)])
+=_\text{par 6} (\mathbf{S} \; (\mathbf{K} \; (\mathbf{S} \; \mathbf{I})) (\mathbf{S} \; T[\lambda x. \mathbf{K}] \; T[\lambda x. x]))
+\]
+\[
+=_\text{par 3} (\mathbf{S} \; (\mathbf{K} \; (\mathbf{S} \; \mathbf{I})) (\mathbf{S} \; (\mathbf{K \; K}) \; T[\lambda x. x]))
+=_\text{par 4} (\mathbf{S} \; (\mathbf{K} \; (\mathbf{S} \; \mathbf{I})) (\mathbf{S} \; (\mathbf{K \; K}) \mathbf{I}))
+\]
+
+En résument, l'algorithme ci-dessous trouve une $\mathbf{S, K, I}$-répresentation de \lam -terme de longueur $n$ en $O(n^3)$. Pour les adeptes de Haskell, le code de $T[]$ est très court (et, presque écrit dans son définition) !
+
+\textbf{todo: insert code}
+
+\subsubsection*{Autres systèmes combinatoires}
+
+La réponse à la dernière question est aussi oui : il existe plusieurs systèmes de combinateurs, mais $\mathbf{S, K, I}$ est le plus populaire. Il existe même une base d'un seul combinateur :
+\[\mathbf{X} \equiv \lambda x. ((x \; \mathbf{S}) \mathbf{K})\]
+Évidemment, on peut réecrire $\mathbf{X}$ sans utiliser $\mathbf{S}$ et $\mathbf{K}$, mais la formule est moins jolie. Vous pouvez vérifier par vous même que :
+\begin{itemize}
+	\item $\mathbf{K = X \; (X \; (X \; X))}$ ;
+	\item $\mathbf{S = X \; (X \; (X \; (X \; X))) = S}$,
+\end{itemize}
+ce que prouve immédiatement que $\mathbf{X}$ est aussi une base combinatoire.
+
+\subsection*{Que peut-on faire avec ?}
+
+Voici encore trois combinateurs avec ses répresentations en $\mathbf{S, K}$. Ils sont tellement importants que chaque porte son propre nom :
+\begin{itemize}
+	\item le composeur $\mathbf{B} xyz \equiv x(yz) = \mathbf{S(KS)K}$ ;
+	\item le permutateur $\mathbf{C} xyz \equiv xzy = \mathbf{S ((S(KS)K) (S(KS)K) S) (KK)}$ ;
+	\item le duplicateur $\mathbf{W} xy \equiv xyy = \mathbf{SS(K(SKK))}$.
+\end{itemize}
+
+Ces combinateurs nous permet de redéfinir plus simplement les objets de \lam -calcul. Souvenez-vous que la logique combinatoire est \lam -calcul privé du symbole \lam ~?
+
+Voici les booléens :
+\[\mathbf{tru} \equiv \mathbf{K} ; \qquad \mathbf{fls} \equiv \mathbf{KI} ; \qquad \mathbf{if} = \mathbf{I}.\]
+%\begin{itemize}
+%	\item $\mathbf{tru} = \mathbf{K}$ ;
+%	\item $\mathbf{fls} = \mathbf{KI}$ ;
+%	\item $\mathbf{if} = \mathbf{I}$.
+%\end{itemize}
+
+Et les nombres de Church :
+\[\mathbf{\bar{0}} \equiv \mathbf{KI} ; \qquad \mathbf{\bar{1}} \equiv \mathbf{(SB)KI} ; \qquad \mathbf{\bar{2}} \equiv \mathbf{(SB)(SB)KI} ; \ldots\]
+\[\mathbf{\bar{n}} = \mathbf{(SB)}^n\mathbf{KI}, \; n > 0.\]
+%\begin{itemize}
+%	\item $\mathbf{\bar{0}} = \mathbf{KI}$ ;
+%	\item $\mathbf{\bar{1}} = \mathbf{(SB)KI}$ ;
+%	\item $\mathbf{\bar{2}} = \mathbf{(SB)(SB)KI}$ ;
+%	\item \ldots
+%	\item $\mathbf{\bar{n}} = \mathbf{(SB)}^n\mathbf{KI}, n > 0$.
+%\end{itemize}
+
+Ainsi que son arithmétique :
+\[\mathbf{plus} \equiv \mathbf{CI(SB)} ; \qquad \mathbf{mult} \equiv \mathbf{B} ; \qquad \mathbf{power} = \mathbf{CI}.\]
+%\begin{itemize}
+%	\item $\mathbf{plus} = \mathbf{CI(SB)}$ ;
+%	\item $\mathbf{mult} = \mathbf{B}$ ;
+%	\item $\mathbf{power} = \mathbf{CI}$.
+%\end{itemize}
+
+\subsection*{Applications}
+%+ Supercombinator
+%+ Fixed point combinator
+%
+%+ Graph reduction machine
+%
+%Applications
+%- Compilation of functional languages
+%- Logic (i.e., Curry-Howard isomorphism)
+
+La question tout-à-fait légale est que apportent-ont les combinateurs en plus de \lam -calcul ? De point de vue théorique, presque rien - la logique combinatoire est équivalente au \lam -calcul sans type. Mais en pratique, les certains expressions s'écrit plus élégant à l'aide de combinateurs (souvenez-vous l'expression de $\mathbf{fact}$ qui calcul le factoriel et utilise en combinateur de point fixe ?)
+
+Voici encore les examples d'utilisation des combinateurs
+
+\subsubsection*{Langages de programmation}
+
+D'abord, les certains distinguent la programmation de niveau fonctionnel ou programmation tacite -- une partie de paradigme fonctionnelle. Son principe est utiliser les combinateurs et compositions au lieu d'écrire explicitement les arguments de la fonction implementée. Par exemple, la fonction qui calcule la somme de deux listes en Haskell s'écrit à l'aide du combinateur \verb|folrd|:
+
+\verb|sum = foldr (+) 0|
+
+Les combinateurs sont largement utilisés dans l'implémentation des compilateurs pour les langages purement fonctionnel. L'un de premiers essais a été fait par David Turner dans son implémentation de SASL. Plus tard, Kenneth E. Iverson a developpé un langage J qui est un successeur de APL. Il a montré que la programmation tacite est possible en n'importe lequel langage de la famille APL.
+
+La motivation principale de l'utilisation des combinateur est le process de la reduction de graphe melangé avec le calcul "lazy". C'est un sujet qui est couvert par plusieurs \href{http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.519.2508&rep=rep1&type=pdf}{articles} scientifiques et \href{https://www.reddit.com/r/haskell/comments/q0ngj/lazy_evaluation_vs_leftmost_reduction_with_graph/}{discussions}. L'idée bref est ce que n'importe quelle expression peut être représenté comme un graphe. Par exemple, ci-dessus un graphe qui corrésponde à une expression $\ldots$. Il est un arbre simple, donc son reduction est aussi simple.
+
+\textbf{todo - image}
+
+Imaginez maintenant que nous nous autorisons les graphes plus compliqués. Les cycles non-orientés servent pour ne pas réevaluer la même expression. \textbf{todo - image}
+
+De plus, on peut s'autoriser à travailler avec des structures infinies (comme la récursion dans la répresentation fonctionnelle) - donc nous avons besoin du calcul "lazy".
+\textbf{todo - image}
+
+Dans cette abstraction, la compilateur est une \href{https://en.wikipedia.org/wiki/Graph_reduction_machine}{machine} qui manipule les graphes d'expressions. L'avantage de l'utilisation de combinateurs est qu'ile incapsulent naturellement le "lazyness". Donc, is on est muni d'une moteur rélativement primitive de calculs combinatoire, on peut le facilement enlargir - cf. T. J. W. Clarke, P. Gladstone, C. MacLean, A. C. Norman: SKIM — The S, K, I Reduction Machine. LISP Conference.
+
+\subsubsection*{Isomorphisme de Curry-Howard}
+
+TODO\ldots
