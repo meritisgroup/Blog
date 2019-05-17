@@ -1,7 +1,7 @@
-package org.meritis.gametheory
+package tictactoe
 
 import org.scalatest.FunSuite
-import org.meritis.gametheory.TicTacToe._
+import TicTacToe._
 
 class TicTacToeTest extends FunSuite {
 

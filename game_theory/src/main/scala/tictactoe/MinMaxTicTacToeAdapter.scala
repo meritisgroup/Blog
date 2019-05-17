@@ -1,6 +1,7 @@
-package org.meritis.gametheory
+package tictactoe
 
-import org.meritis.gametheory.TicTacToe._
+import algo.MinMax
+import TicTacToe._
 
 class MinMaxTicTacToeAdapter(side: Mark) extends MinMax[Grid] {
 

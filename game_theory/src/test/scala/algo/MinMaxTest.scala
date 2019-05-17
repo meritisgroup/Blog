@@ -1,4 +1,4 @@
-package org.meritis.gametheory
+package algo
 
 import org.scalatest.FunSuite
 

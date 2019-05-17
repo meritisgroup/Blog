@@ -1,4 +1,4 @@
-package org.meritis.gametheory
+package tictactoe
 
 object TicTacToe {
 

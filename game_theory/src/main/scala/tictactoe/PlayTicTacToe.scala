@@ -1,8 +1,8 @@
-package org.meritis.gametheory
+package tictactoe
 
 import scala.util.Random
 
-import org.meritis.gametheory.TicTacToe._
+import TicTacToe._
 
 object PlayTicTacToe extends App {
 
