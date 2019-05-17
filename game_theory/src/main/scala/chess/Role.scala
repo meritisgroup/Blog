@@ -22,7 +22,7 @@ case object King extends Role {
 case object Queen extends Role {
 	val forsyth = 'q'
 
-	val dirs: Directions = Rook.dirs ::: Bishop.dirs
+	val dirs = Rook.dirs ::: Bishop.dirs
 
 }
 
@@ -30,7 +30,7 @@ case object Queen extends Role {
 case object Rook extends Role {
 	val forsyth = 'r'
 
-	val dirs: Directions = List(_.up, _.down, _.left, _.right)
+	val dirs = List(_.up, _.down, _.left, _.right)
 
 }
 
@@ -38,7 +38,7 @@ case object Rook extends Role {
 case object Bishop extends Role {
 	val forsyth = 'b'
 
-	val dirs: Directions = List(_.upLeft, _.upRight, _.downLeft, _.downRight)
+	val dirs = List(_.upLeft, _.upRight, _.downLeft, _.downRight)
 
 }
 
@@ -65,7 +65,7 @@ case object Knight extends Role {
 case object Pawn extends Role {
 	val forsyth = 'p'
 	
-	val dirs: Directions = Nil
+	val dirs = Nil
 
 }
 

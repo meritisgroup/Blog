@@ -8,20 +8,14 @@ sealed case class Pos private (x: Int, y: Int) {
 
 	import Pos.posAt
 
-	val down: Option[Pos] = posAt(x, y - 1)
-	val left: Option[Pos] = posAt(x - 1, y)
-	val downLeft: Option[Pos] = posAt(x - 1, y - 1)
-	val downRight: Option[Pos] = posAt(x + 1, y - 1)
-	val up: Option[Pos] = posAt(x, y + 1)
-	val right: Option[Pos] = posAt(x + 1, y)
-	val upLeft: Option[Pos] = posAt(x - 1, y + 1)
-	val upRight: Option[Pos] = posAt(x + 1, y + 1)
-
-	/*def |<>|(stop: Pos => Boolean, dir: Direction): List[Pos] = {
-		dir(this) map {
-			p => p :: (if (stop(p)) Nil else p.|<>|(stop, dir))
-		} getOrElse Nil
-	}*/
+	lazy val down: Option[Pos] = posAt(x, y - 1)
+	lazy val left: Option[Pos] = posAt(x - 1, y)
+	lazy val downLeft: Option[Pos] = posAt(x - 1, y - 1)
+	lazy val downRight: Option[Pos] = posAt(x + 1, y - 1)
+	lazy val up: Option[Pos] = posAt(x, y + 1)
+	lazy val right: Option[Pos] = posAt(x + 1, y)
+	lazy val upLeft: Option[Pos] = posAt(x - 1, y + 1)
+	lazy val upRight: Option[Pos] = posAt(x + 1, y + 1)
 
 	def onSameDiagonal(other: Pos): Boolean = abs(x - other.x) == abs(y - other.y)
 	def onSameLine(other: Pos): Boolean = (y == other.y) || (x == other.x)

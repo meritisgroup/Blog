@@ -1,5 +1,6 @@
 package chess
 
+import scala.annotation.tailrec
 import chess._
 
 
@@ -17,20 +18,20 @@ case class Actor(piece: Piece, pos: Pos, board: Board) {
 	}
 
 	def longRange(dirs: Directions): List[Move] = {
-		//@tailrec
-		def rec(from: Pos, dir: Direction, list: List[Move]): List[Move] = dir(from) match {
+		@tailrec
+		def rec(from: Pos, dir: Direction, list: List[Option[Move]]): List[Option[Move]] = dir(from) match {
 			case Some(to) if board(to).isEmpty => {
-				val iter = board.move(pos, to) map { after => Move(piece, pos, to, after) }
-				rec(to, dir, iter.toList ++ list)
+				val newMove = board.move(pos, to) map { after => Move(piece, pos, to, after) }
+				rec(to, dir, newMove :: list)
 			}
 			case Some(to) if !board(to).isEmpty && !board(to).get.is(piece.color) => {
-				val iter = board.take(pos, to) map { after => Move(piece, pos, to, after)}
-				iter.toList ++ list
+				val newMove = board.take(pos, to) map { after => Move(piece, pos, to, after) }
+				newMove :: list
 			}
 			case _ => list
 		}
 
-		dirs flatMap { dir => rec(pos, dir, Nil) }
+		dirs flatMap { dir => rec(pos, dir, Nil) } flatten
 	}
 
 	def shortRange(dirs: Directions): List[Move] = {
@@ -45,24 +46,32 @@ case class Actor(piece: Piece, pos: Pos, board: Board) {
 
 	def pawnMoves: List[Move] = {
 		val firstLine = if (piece.is(Color.White)) 2 else 7
-		val dir: Direction = if (piece.is(Color.White)) (_.up) else (_.down)
+		val movingDir: Direction = if (piece.is(Color.White)) (_.up) else (_.down)
+		val takingDirs: Directions = if (piece.is(Color.White)) List(_.upLeft, _.upRight)
+										else List(_.downLeft, _.downRight)
 
-		def moveBy2(from: Pos): Option[Move] = dir(from) match {
-			case Some(to) if pos.y == firstLine && board(to).isEmpty => board.move(pos, to) map { after => Move(piece, pos, to, after) }
+		def moveBy2(from: Pos): Option[Move] = movingDir(from) match {
+			case Some(to) if pos.y == firstLine && board(to).isEmpty =>
+				board.move(pos, to) map { after => Move(piece, pos, to, after) }
 			case _ => None
 		}
 
-		def moveBy1or2(from: Pos): List[Move] = dir(from) match {
-			case None => Nil
-			case Some(to) if !board(to).isEmpty => Nil
-			case Some(to) => {
+		def moveBy1or2(from: Pos): List[Move] = movingDir(from) match {
+			case Some(to) if board(to).isEmpty => {
 				val c1 = board.move(pos, to) map { after => Move(piece, pos, to, after) }
-				val c2 = moveBy2(to)
-				List(c1, c2).flatten
+				if (c1.isEmpty) Nil
+				else List(c1, moveBy2(to)).flatten
 			}
+			case _ => Nil
 		}
 
-		moveBy1or2(pos)
+		def takeCross(from: Pos, dir: Direction): Option[Move] = dir(pos) match {
+			case Some(to) if !board(to).isEmpty =>
+				board.take(pos, to) map { after => Move(piece, pos, to, after) }
+			case _ => None
+		}
+
+		moveBy1or2(pos) ++ (takingDirs flatMap { dir => takeCross(pos, dir) })
 	}
 
 }
