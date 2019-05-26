@@ -2,11 +2,13 @@ package algo
 
 import scala.annotation.tailrec
 
-trait AlphaBeta[Node] extends MinMax[Node] {
+trait AlphaBeta[Node] {
 
-	override def findBestNode(initialNode: Node): (Node, Double) = findBestNodeAlphaBeta(initialNode, initialDepth, Double.MinValue, Double.MaxValue, true)
+	def eval(node: Node): Double
 
-	override def findBestNode(initialNode: Node, depth: Int): (Node, Double) = findBestNodeAlphaBeta(initialNode, depth, Double.MinValue, Double.MaxValue, true)
+	def children(node: Node, maximize: Boolean): Seq[Node]
+
+	def findBestNode(initialNode: Node, depth: Int): (Node, Double) = findBestNodeAlphaBeta(initialNode, depth, Double.MinValue, Double.MaxValue, true)
 
 	def findBestNodeAlphaBeta(node: Node, depth: Int, alpha: Double, beta: Double, maximize: Boolean): (Node, Double) = {
 
