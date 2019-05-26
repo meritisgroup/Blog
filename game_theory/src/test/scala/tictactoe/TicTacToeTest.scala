@@ -17,6 +17,12 @@ class TicTacToeTest extends FunSuite {
 						Empty, Empty, Empty).toVector
 	}
 
+	trait Level3 {
+		val grid = List(Cross, Circle, Empty,
+						Circle, Circle, Empty,
+						Cross, Empty, Empty).toVector
+	}
+
 	test("legal moves from initial") {
 		assert(legalMoves(initialGrid, Cross).size === 9)
 		assert(legalMoves(initialGrid, Circle).size === 9)
@@ -49,6 +55,33 @@ class TicTacToeTest extends FunSuite {
 	test("win level2") {
 		new Level2 {
 			assert(!win(grid, Cross))
+		}
+	}
+
+	test("brain 1st move") {
+		val grid = TicTacToeBrain.bestMove(Circle, initialGrid)
+		assert(grid(4) === Circle)
+	}
+
+	test("brain 2nd move") {
+		new Level2 {
+			val grid2 = TicTacToeBrain.bestMove(Circle, grid)
+			assert(grid2(0) === Circle)
+		}
+	}
+
+	test("brain : computer is about to win") {
+		new Level1 {
+			val grid2 = TicTacToeBrain.bestMove(Circle, grid)
+			assert(grid2(7) === Circle)
+			assert(win(grid2, Circle))
+		}
+	}
+
+	test("brain : player is about to win") {
+		new Level3 {
+			val grid2 = TicTacToeBrain.bestMove(Cross, grid)
+			assert(grid2(5) === Cross)
 		}
 	}
 

@@ -15,7 +15,7 @@ object PlayTicTacToe extends App {
 
 	def markToChar(mark: Mark): Char = mark match {
 		case Cross  => 'X'
-		case Circle => '0'
+		case Circle => 'O'
 		case _      => '-'
 	}
 
@@ -53,8 +53,7 @@ object PlayTicTacToe extends App {
 	}
 
 	def letComputerPlay(grid: Grid): Grid = {
-		val best = new MinMaxTicTacToeAdapter(computerSide).findBestNode(grid)
-		best._1
+		TicTacToeBrain.bestMove(computerSide, grid)
 	}
 
 	def playRound(grid: Grid): Mark = {
@@ -69,13 +68,19 @@ object PlayTicTacToe extends App {
 			} else {
 				println("The computer plays")
 				val gridAfterComputer = letComputerPlay(gridAfterUser)
-				if (win(gridAfterComputer, computerSide)) computerSide
-				else playRound(gridAfterComputer)
+				if (win(gridAfterComputer, computerSide)) {
+					println("Grid after computer's move :\n" + gridToString(gridAfterComputer))
+					computerSide
+				} else playRound(gridAfterComputer)
 			}
 		}
 	}
 
+	// Start by player
 	val winner = playRound(initialGrid)
+	// Start by computer
+	//val winner = playRound(letComputerPlay(initialGrid))
+
 	if (winner == playerSide) println("The player won !")
 	else if (winner == computerSide) println("The computer won !")
 	else println("No move allowed anymore : draw !")
