@@ -20,7 +20,7 @@ case class Board(pieces: Map[Pos, Piece]) {
 	}
 
 	def take(orig: Pos, dest: Pos, taken: Pos): Option[Board] = {
-		if (pieces contains dest) pieces get orig map { piece => copy(pieces = pieces - orig - taken + ((dest, piece))) }
+		if ((pieces contains taken) && !(pieces contains dest)) pieces get orig map { piece => copy(pieces = pieces - orig - taken + ((dest, piece))) }
 		else None
 	}
 
