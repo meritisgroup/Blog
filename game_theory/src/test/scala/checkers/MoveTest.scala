@@ -1,15 +1,7 @@
 package checkers
 
-import org.scalatest.FunSuite
 
-
-class MoveTest extends FunSuite {
-
-	def buildBoard(pieces: Map[Piece, List[Int]]): Board = {
-		val p = for ((piece, list) <- pieces.toList; pos <- list) yield ((piece, Pos.posAt(pos).get))
-		val res = p.foldLeft(Board.empty) { (board, elt) => board.place(elt._1, elt._2).get }
-		res
-	}
+class MoveTest extends CheckersTest {
 
 	def checkTo(side: Color, from: Int, to: List[Int], moves: List[Move]) = {
 		val set = to.map(x => Pos.posAt(x).get).toSet
@@ -156,6 +148,22 @@ class MoveTest extends FunSuite {
 		assert(moves3.size === 1)
 		assert(moves3.flatMap(move => move.after.pieces.values).toSet === Set(Piece(White, Pawn)))
 		checkTo(White, 11, List(13), moves3)
+	}
+
+	test("win") {
+		assert(Move.win(Board.init, White) === Ongoing)
+		assert(Move.win(Board.init, Black) === Ongoing)
+
+		// Only white pawns
+		val board1 = buildBoard(Map(Piece(White, Pawn) -> List(37, 28, 19)))
+		assert(Move.win(board1, White) === Won)
+		assert(Move.win(board1, Black) === Lost)
+
+		// White pawns blocked
+		val board2 = buildBoard(Map(Piece(White, Pawn) -> List(26),
+									Piece(Black, Pawn) -> List(21, 17)))
+		assert(Move.win(board2, White) === Lost)
+		assert(Move.win(board2, Black) === Ongoing)
 	}
 
 }

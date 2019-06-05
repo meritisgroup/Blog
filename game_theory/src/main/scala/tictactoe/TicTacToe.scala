@@ -1,11 +1,14 @@
 package tictactoe
 
+
 object TicTacToe {
 
 	abstract class Mark
 	case object Cross extends Mark
 	case object Circle extends Mark
 	case object Empty extends Mark
+
+	def opponent(s: Mark): Mark = if (s == Cross) Circle else Cross
 
 	// 0-1-2
 	// 3-4-5

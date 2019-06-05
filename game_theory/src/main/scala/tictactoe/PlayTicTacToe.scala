@@ -1,8 +1,8 @@
 package tictactoe
 
 import scala.util.Random
-
 import TicTacToe._
+
 
 object PlayTicTacToe extends App {
 

@@ -1,24 +1,26 @@
 package algo
 
-import org.scalatest.FunSuite
-import checkers.MinMax
+import java.util.concurrent.atomic.AtomicInteger
+import scala.util.Random
+import tictactoe.TicTacToe
+import tictactoe.TicTacToe._
+import tictactoe.PlayTicTacToe._
 
 
-class AlphaBetaTest extends FunSuite {
+class AlphaBetaTest extends AlgoTest {
 
 	case class Node(eval: Double, children: List[Node] = Nil)
 
-	def evalFct(node: Node): Double = node.eval
+	def eval(node: Node, maximize: Boolean): Double = node.eval
+	def children(node: Node, maximize: Boolean): List[Node] = node.children
 
-	def childrenFct(node: Node, maximize: Boolean): List[Node] = node.children
-
-	class AlphaBetaAlgoTest extends AlphaBeta[Node] {
-		var evalCount: Int = 0
-		def eval(node: Node): Double = {
-			evalCount += 1
+	def evalAndCount(counter: AtomicInteger): (Node, Boolean) => Double = {
+		def tmp(node: Node, maximize: Boolean): Double = {
+			counter.incrementAndGet
 			node.eval
 		}
-		def children(node: Node, maximize: Boolean): List[Node] = node.children
+
+		tmp
 	}
 
 	trait Level1 {
@@ -39,44 +41,88 @@ class AlphaBetaTest extends FunSuite {
 		val initial = Node(4, List(father1, father2))
 	}
 
+	trait LevelAlphaCut {
+		val child1 = Node(5)
+		val child2 = Node(0, List(Node(4), Node(5), Node(6), Node(7), Node(8)))
+		val initial = Node(0, List(child1, child2))
+	}
+
+	trait LevelBetaCut {
+		val child1 = Node(3)
+		val child2 = Node(0, List(Node(4), Node(5), Node(6), Node(7), Node(8)))
+		val initial1 = Node(0, List(child1, child2))
+		val initial = Node(0, List(initial1))
+	}
+
 	test("same results as min max") {
 		new Level1 {
-			val bestMinMax = new MinMax[Node]().findBestNode(initial, 1, evalFct, childrenFct)
-			val bestAlphaBeta = new AlphaBetaAlgoTest().findBestNode(initial, 1)
-			assert(bestMinMax === bestAlphaBeta)
+			val bestMinMax = MinMax.findBestNode[Node](initial, 10, eval, children)
+			val bestAlphaBeta = AlphaBeta.findBestNode[Node](initial, 10, eval, children)
+			assert(bestMinMax.value === bestAlphaBeta.value)
+			assert(bestMinMax.bestChilds === bestAlphaBeta.bestChilds)
 		}
 		new Level2 {
-			val bestMinMax = new MinMax[Node]().findBestNode(initial, 1, evalFct, childrenFct)
-			val bestAlphaBeta = new AlphaBetaAlgoTest().findBestNode(initial, 1)
-			assert(bestMinMax === bestAlphaBeta)
+			val bestMinMax = MinMax.findBestNode[Node](initial, 10, eval, children)
+			val bestAlphaBeta = AlphaBeta.findBestNode[Node](initial, 10, eval, children)
+			assert(bestMinMax.value === bestAlphaBeta.value)
+			assert(bestMinMax.bestChilds === bestAlphaBeta.bestChilds)
 		}
 		new Level3 {
-			val bestMinMax = new MinMax[Node]().findBestNode(initial, 1, evalFct, childrenFct)
-			val bestAlphaBeta = new AlphaBetaAlgoTest().findBestNode(initial, 1)
-			assert(bestMinMax === bestAlphaBeta)
+			val bestMinMax = MinMax.findBestNode[Node](initial, 10, eval, children)
+			val bestAlphaBeta = AlphaBeta.findBestNode[Node](initial, 10, eval, children)
+			assert(bestMinMax.value === bestAlphaBeta.value)
+			assert(bestMinMax.bestChilds === bestAlphaBeta.bestChilds)
+		}
+		new LevelAlphaCut {
+			val bestMinMax = MinMax.findBestNode[Node](initial, 10, eval, children)
+			val bestAlphaBeta = AlphaBeta.findBestNode[Node](initial, 10, eval, children)
+			assert(bestMinMax.value === bestAlphaBeta.value)
+			assert(bestMinMax.bestChilds === bestAlphaBeta.bestChilds)
+		}
+		new LevelBetaCut {
+			val bestMinMax = MinMax.findBestNode[Node](initial, 10, eval, children)
+			val bestAlphaBeta = AlphaBeta.findBestNode[Node](initial, 10, eval, children)
+			assert(bestMinMax.value === bestAlphaBeta.value)
+			assert(bestMinMax.bestChilds === bestAlphaBeta.bestChilds)
+		}
+	}
+
+	test("test with tic tac toe : min max vs alpha beta") {
+		// Do it 10 times to make sure there is no random result
+		for (i <- 0 to 10) {
+			val result = play(Circle, initialGrid, playerMinMax, playerAlphaBeta)
+			if (result._1 == Circle) {
+				result._2.reverse.foreach { grid => println(gridToString(grid)) }
+				fail("AlphaBeta was defeated by MinMax when playing 1st")
+			}
+
+			val result2 = play(Circle, initialGrid, playerAlphaBeta, playerMinMax)
+			if (result2._1 == Cross) {
+				result2._2.reverse.foreach { grid => println(gridToString(grid)) }
+				fail("AlphaBeta was defeated by MinMax when playing 2nd")
+			}
 		}
 	}
 
 	test("alpha cut") {
 		// See following page to check example tree
-		// https://fr.wikipedia.org/wiki/%C3%89lagage_alpha-b%C3%AAta#Principe for 
-		val child1 = Node(5)
-		val child2 = Node(0, List(Node(4), Node(5), Node(6), Node(7), Node(8)))
-		val initial = Node(0, List(child1, child2))
-		val algo = new AlphaBetaAlgoTest()
-		algo.findBestNode(initial, 10)
-		assert(algo.evalCount === 2)
+		// https://fr.wikipedia.org/wiki/%C3%89lagage_alpha-b%C3%AAta#Principe for
+		new LevelAlphaCut {
+			val evalCount = new AtomicInteger(0)
+			AlphaBeta.findBestNode[Node](initial, 10, evalAndCount(evalCount), children)
+			assert(evalCount.get === 2)
+		}
 	}
 
 	test("beta cut") {
 		// See following page to check example tree
 		// https://fr.wikipedia.org/wiki/%C3%89lagage_alpha-b%C3%AAta#Principe for 
-		val child1 = Node(3)
-		val child2 = Node(0, List(Node(4), Node(5), Node(6), Node(7), Node(8)))
-		val initial = Node(0, List(child1, child2))
-		val algo = new AlphaBetaAlgoTest()
-		algo.findBestNodeAlphaBeta(initial, 10, Double.MinValue, Double.MaxValue, false)
-		assert(algo.evalCount === 2)
+		// Added a root node compared to Wikipedia to simulate the context with maximize=false
+		new LevelBetaCut {
+			val evalCount = new AtomicInteger(0)
+			AlphaBeta.findBestNode[Node](initial, 10, evalAndCount(evalCount), children)
+			assert(evalCount.get === 2)
+		}
 	}
 
 }

@@ -2,6 +2,7 @@ package tictactoe
 
 import TicTacToe._
 
+
 object TicTacToeBrain {
 
 	val middle = 4
@@ -35,8 +36,8 @@ object TicTacToeBrain {
 
 			// If the player put a mark in a corner, fill the opposite corner
 			if (corners.exists(i => grid(i) != Empty)) {
-				val corner = corners.find(i => grid(i) != Empty)
-				val oppositeCorner = corners((corner.get + 2) % corners.size)
+				val cornerIndex = corners.zipWithIndex.find(i => grid(i._1) != Empty).get._2
+				val oppositeCorner = corners((cornerIndex + 2) % corners.size)
 				grid.updated(oppositeCorner, side)
 
 			// Otherwise, fill the closest corner

@@ -24,19 +24,6 @@ case class Board(pieces: Map[Pos, Piece]) {
 		else None
 	}
 
-	def evaluate(refColor: Color): Double = {
-		def evaluateEach(pos: Pos, piece: Piece): Double = piece.role match {
-			case Pawn => 1
-			case Queen => 3
-		}
-
-		pieces.foldLeft(0.0)((acc, elt) => {
-			val eltColor = elt._2.color
-			if (eltColor == refColor) acc + evaluateEach(elt._1, elt._2)
-			else acc - evaluateEach(elt._1, elt._2)
-		})
-	}
-
 }
 
 

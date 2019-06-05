@@ -1,66 +1,66 @@
 package algo
 
 import scala.annotation.tailrec
+import MinMax._
 
-trait AlphaBeta[Node] {
 
-	def eval(node: Node): Double
+object AlphaBeta {
 
-	def children(node: Node, maximize: Boolean): Seq[Node]
+	def findBestNode[Node](initialNode: Node, maxDepth: Int, eval: EvalutionFct[Node], children: ChildrenFct[Node]): Result[Node] = {
 
-	def findBestNode(initialNode: Node, depth: Int): (Node, Double) = findBestNodeAlphaBeta(initialNode, depth, Double.MinValue, Double.MaxValue, true)
+		def intern(node: Node, depth: Int, alpha: Double, beta: Double, maximize: Boolean): Result[Node] = {
+			@tailrec
+			def recMax(best: Result[Node], childrenSeq: Seq[Node], alpha: Double, beta: Double): Result[Node] = {
+				if (childrenSeq.isEmpty) {
+					best
+				} else {
+					val childNode = childrenSeq.head
+					val childResult = intern(childNode, depth - 1, alpha, beta, !maximize)
+					val newBest = if (childResult.value > best.value) Result(childResult.value, childNode :: childResult.bestChilds) else best
+					if (newBest.value >= beta) newBest
+					else {
+						val newAlpha = if (newBest.value > alpha) newBest.value else alpha
+						recMax(newBest, childrenSeq.tail, newAlpha, beta)
+					}
+				}
+			}
 
-	def findBestNodeAlphaBeta(node: Node, depth: Int, alpha: Double, beta: Double, maximize: Boolean): (Node, Double) = {
+			@tailrec
+			def recMin(best: Result[Node], childrenSeq: Seq[Node], alpha: Double, beta: Double): Result[Node] = {
+				if (childrenSeq.isEmpty) {
+					best
+				} else {
+					val childNode = childrenSeq.head
+					val childResult = intern(childNode, depth - 1, alpha, beta, !maximize)
+					val newBest = if (childResult.value < best.value) Result(childResult.value, childNode :: childResult.bestChilds) else best
+					if (newBest.value <= alpha) newBest
+					else {
+						val newBeta = if (newBest.value < beta) newBest.value else beta
+						recMin(newBest, childrenSeq.tail, alpha, newBeta)
+					}
+				}
+			}
 
-		@tailrec
-		def recMax(best: (Node, Double), childrenSeq: Seq[Node], alpha: Double, beta: Double): (Node, Double) = {
-			if (childrenSeq.isEmpty) {
-				best
+			if (depth == 0) {
+				// If we reached the initial depth, just evaluate the node
+				Result(eval(node, maximize), Nil)
+
 			} else {
-				val child = childrenSeq.head
-				val childRes = findBestNodeAlphaBeta(child, depth - 1, alpha, beta, !maximize)
-				val maxRes = if (childRes._2 > best._2) childRes else best
-				if (maxRes._2 >= beta) maxRes
-				else {
-					val newAlpha = if (maxRes._2 > alpha) maxRes._2 else alpha
-					recMax(maxRes, childrenSeq.tail, newAlpha, beta)
+				val nodeChildren = children(node, maximize)
+
+				if (nodeChildren.isEmpty) {
+					// If the node has no children, evaluation is accurate
+					Result(eval(node, maximize), Nil)
+
+				} else if (maximize) {
+					recMax(Result(Double.MinValue, Nil), nodeChildren, alpha, beta)
+				} else {
+					recMin(Result(Double.MaxValue, Nil), nodeChildren, alpha, beta)
 				}
 			}
 		}
 
-		@tailrec
-		def recMin(best: (Node, Double), childrenSeq: Seq[Node], alpha: Double, beta: Double): (Node, Double) = {
-			if (childrenSeq.isEmpty) {
-				best
-			} else {
-				val child = childrenSeq.head
-				val childRes = findBestNodeAlphaBeta(child, depth - 1, alpha, beta, !maximize)
-				val minRes = if (childRes._2 < best._2) childRes else best
-				if (minRes._2 <= alpha) minRes
-				else {
-					val newBeta = if (minRes._2 < beta) minRes._2 else beta
-					recMin(minRes, childrenSeq.tail, alpha, newBeta)
-				}
-			}
-		}
-
-		if (depth == 0) {
-			// If we reached the initial depth, just evaluate the node
-			(node, eval(node))
-
-		} else {
-			val nodeChildren = children(node, maximize)
-
-			if (nodeChildren.isEmpty) {
-				// If the node has no children, evaluation is accurate
-				(node, eval(node))
-
-			} else {
-				val res = if (maximize) recMax((node, Double.MinValue), nodeChildren, alpha, beta)
-							else recMin((node, Double.MaxValue), nodeChildren, alpha, beta)
-				res
-			}
-		}		
+		intern(initialNode, maxDepth, Double.MinValue, Double.MaxValue, true)
 	}
 
 }

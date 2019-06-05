@@ -1,9 +1,7 @@
 package checkers
 
-import org.scalatest.FunSuite
 
-
-class PieceTest extends FunSuite {
+class PieceTest extends CheckersTest {
 
 	def checkRowCol(m: Int, row: Int, col: Int) = {
 		assert(Pos.row(m) === row)

@@ -3,39 +3,47 @@ package checkers
 import scala.annotation.tailrec
 
 
+sealed trait Status
+
+case object Won extends Status
+
+case object Lost extends Status
+
+case object Ongoing extends Status
+
+
 sealed trait Direction {
 	def apply(at: Pos): Option[Pos]
-	def perpendicular: List[Direction]
 }
 
 case object UpAndLeft extends Direction {
-	override def apply(at: Pos) = at.upLeft
-	override lazy val perpendicular = this :: Direction.computePerpendicular(this)
+	def apply(at: Pos) = at.upLeft
+	override val hashCode = 1
 }
 
 case object UpAndRight extends Direction {
-	override def apply(at: Pos) = at.upRight
-	override lazy val perpendicular = this :: Direction.computePerpendicular(this)
+	def apply(at: Pos) = at.upRight
+	override val hashCode = 2
 }
 
 case object DownAndLeft extends Direction {
-	override def apply(at: Pos) = at.downLeft
-	override lazy val perpendicular = this :: Direction.computePerpendicular(this)
+	def apply(at: Pos) = at.downLeft
+	override val hashCode = 3
 }
 
 case object DownAndRight extends Direction {
-	override def apply(at: Pos) = at.downRight
-	override lazy val perpendicular = this :: Direction.computePerpendicular(this)
+	def apply(at: Pos) = at.downRight
+	override val hashCode = 4
 }
 
 object Direction {
 
-	def computePerpendicular(dir: Direction): List[Direction] = dir match {
-		case UpAndLeft => List(UpAndRight, DownAndLeft)
-		case UpAndRight => List(UpAndLeft, DownAndRight)
-		case DownAndLeft => List(UpAndLeft, DownAndRight)
-		case DownAndRight => List(UpAndLeft, DownAndRight)
-	}
+	val perpendiculars: Map[Direction, List[Direction]] = Map(
+		UpAndLeft -> List(UpAndLeft, UpAndRight, DownAndLeft),
+		UpAndRight -> List(UpAndRight, UpAndLeft, DownAndRight),
+		DownAndLeft -> List(DownAndLeft, UpAndLeft, DownAndRight),
+		DownAndRight -> List(DownAndRight, UpAndLeft, DownAndRight)
+	)
 
 	val whitePawnMoves: List[Direction] = List(UpAndLeft, UpAndRight)
 	val blackPawnMoves: List[Direction] = List(DownAndLeft, DownAndRight)
@@ -52,6 +60,17 @@ object Move {
 
 	def whitePromoteFilter(pos: Pos): Boolean = (pos.m <= 5)
 	def blackPromoteFilter(pos: Pos): Boolean = (pos.m >= 46)
+
+	def win(board: Board, sideToPlay: Color): Status = {
+		val count = board.pieces.foldLeft((0, 0))((acc, elt) => {
+			if (elt._2.color == sideToPlay) (acc._1 + 1, acc._2) else (acc._1, acc._2 + 1)
+		})
+
+		if (count._1 == 0) Lost
+		else if (count._2 == 0) Won
+		else if (Move.legalMoves(board, sideToPlay).isEmpty) Lost
+		else Ongoing
+	}
 
 	def legalMoves(prev: Board, side: Color): List[Move] = {
 
@@ -117,8 +136,8 @@ object Move {
 				val moves = { for (posOpponent <- firstOpponent(pos, dir);
 									posEmpty <- emptyPosAfter(posOpponent, dir))
 								yield buildMove(posOpponent, posEmpty)
-							} flatten
-				val recMoves = moves flatMap { move => queenCapture(from, move.to, piece, move.after, move.captureCount, dir.perpendicular) }
+							}.flatten
+				val recMoves = moves flatMap { move => queenCapture(from, move.to, piece, move.after, move.captureCount, Direction.perpendiculars(dir)) }
 				moves ++ recMoves
 			}
 		}
@@ -127,14 +146,12 @@ object Move {
 
 		def promote(move: Move): Move = {
 			if (!move.after.pieces.keys.exists(promoteFilter)) {
-				System.err.println("aie")
 				move
 			} else {
 				val newPieces = for ((pos, piece) <- move.after.pieces) yield {
 					if (!promoteFilter(pos)) (pos, piece)
 					else (pos, Piece(side, Queen))
 				}
-				System.err.println("YES")
 				move.copy(after = Board(newPieces))
 			}
 		}

@@ -11,38 +11,24 @@ sealed trait Color {
 }
 
 case object White extends Color {
-
 	val unary_! = Black
 	override val hashCode = 1
-
 }
 
 case object Black extends Color {
-
 	val unary_! = White
 	override val hashCode = 2
-
-}
-
-object Color {
-
-	def apply(b: Boolean): Color = if (b) White else Black
-
 }
 
 
 sealed trait Role
 
 case object Pawn extends Role {
-
 	override val hashCode = 1
-
 }
 
 case object Queen extends Role {
-
 	override val hashCode = 2
-
 }
 
 

@@ -1,3 +1,6 @@
+Test / parallelExecution := false
+Test / logBuffered := false
+
 lazy val root = (project in file("."))
 	.settings(
 		name := "Meritis Blog - Game Theory",
