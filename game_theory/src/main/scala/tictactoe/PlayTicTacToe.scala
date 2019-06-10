@@ -45,8 +45,9 @@ object PlayTicTacToe extends App {
 		println("Input your move :")
 		val line = scala.io.StdIn.readLine()
 
-		if (allowedInputs.contains(line)) play(line.toInt)
-		else {
+		if (allowedInputs.contains(line)) {
+			play(line.toInt)
+		} else {
 			println("The value " + line + " you input is not correct.")
 			letUserPlay(grid)
 		}
@@ -71,7 +72,9 @@ object PlayTicTacToe extends App {
 				if (win(gridAfterComputer, computerSide)) {
 					println("Grid after computer's move :\n" + gridToString(gridAfterComputer))
 					computerSide
-				} else playRound(gridAfterComputer)
+				} else {
+					playRound(gridAfterComputer)
+				}
 			}
 		}
 	}

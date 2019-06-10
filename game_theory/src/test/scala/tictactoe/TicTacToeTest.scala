@@ -3,24 +3,25 @@ package tictactoe
 import org.scalatest.FunSuite
 import TicTacToe._
 
+
 class TicTacToeTest extends FunSuite {
 
 	trait Level1 {
-		val grid = List(Cross, Circle, Empty,
+		val grid = Vector(Cross, Circle, Empty,
 						Empty, Circle, Cross,
-						Cross, Empty, Empty).toVector
+						Cross, Empty, Empty)
 	}
 
 	trait Level2 {
-		val grid = List(Empty, Empty, Empty,
+		val grid = Vector(Empty, Empty, Empty,
 						Empty, Cross, Empty,
-						Empty, Empty, Empty).toVector
+						Empty, Empty, Empty)
 	}
 
 	trait Level3 {
-		val grid = List(Cross, Circle, Empty,
+		val grid = Vector(Cross, Circle, Empty,
 						Circle, Circle, Empty,
-						Cross, Empty, Empty).toVector
+						Cross, Empty, Empty)
 	}
 
 	test("legal moves from initial") {
@@ -30,7 +31,7 @@ class TicTacToeTest extends FunSuite {
 
 	test("legal moves from level 1") {
 		new Level1 {
-			val emptyMarks = grid.filter(p => p == Empty).size
+			val emptyMarks = grid.filter(_ == Empty).size
 
 			assert(legalMoves(grid, Cross).size === emptyMarks)
 			assert(legalMoves(grid, Circle).size === emptyMarks)

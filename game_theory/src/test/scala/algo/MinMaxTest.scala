@@ -3,19 +3,15 @@ package algo
 import tictactoe.TicTacToe._
 import tictactoe.PlayTicTacToe._
 import tictactoe._
+import algo.TreeSearchAlgo._
 
 
-class MinMaxTest extends AlgoTest {
+class MinMaxTest extends TreeSearchAlgoTest {
 
 
 //
 // Test on fake trees
 //
-
-	case class Node(eval: Double, children: List[Node] = Nil)
-
-	def eval(node: Node, maximize: Boolean): Double = node.eval
-	def children(node: Node, maximize: Boolean): List[Node] = node.children
 
 	trait Level1 {
 		val initial = Node(0, List(Node(1), Node(2), Node(3)))
@@ -45,35 +41,35 @@ class MinMaxTest extends AlgoTest {
 	test("1 level of children") {
 		// Algo should pick up the highest one
 		new Level1 {
-			val best = MinMax.findBestNode[Node](initial, 1, eval, children)
-			assert(best === MinMax.Result[Node](3, List(Node(3))))
+			val best = MinMax.findBestNode[Node](initial, new NodeRules, HyperParameters(1))
+			assert(best === SearchResult[Node](3, List(Node(3))))
 		}
 	}
 
 	test("2 levels of children") {
 		new Level2 {
 			// Algo should pick up the node at depth 1 with the child assigned to the lowest value (ie 1.1 vs 1 => child2)
-			val best = MinMax.findBestNode[Node](initial, 2, eval, children)
-			assert(best === MinMax.Result[Node](1.1, List(child2, (Node(1.1)))))
+			val best = MinMax.findBestNode[Node](initial, new NodeRules, HyperParameters(2))
+			assert(best === SearchResult[Node](1.1, List(child2, (Node(1.1)))))
 
 			// Try with only 1 level of depth to check if fathers are correctly evaluated
-			val bestWith1Depth = MinMax.findBestNode[Node](initial, 1, eval, children)
-			assert(bestWith1Depth === MinMax.Result[Node](0.5, List(child1)))
+			val bestWith1Depth = MinMax.findBestNode[Node](initial, new NodeRules, HyperParameters(1))
+			assert(bestWith1Depth === SearchResult[Node](0.5, List(child1)))
 		}
 	}
 
 	test("3 levels") {
 		new Level3 {
 			// Make sure that on the 3rd level, max is applied (and not min)
-			val best = MinMax.findBestNode[Node](initial, 3, eval, children)
-			assert(best === MinMax.Result[Node](6, List(father2, child2, Node(6))))
+			val best = MinMax.findBestNode[Node](initial, new NodeRules, HyperParameters(3))
+			assert(best === SearchResult[Node](6, List(father2, child2, Node(6))))
 		}
 	}
 
 	test("pick up random node") {
 		new Level4 {
 			// As child1 and child2 have the same evaluation, they should be returned by the algo randomly
-			val result = for (n <- 0 until 1000) yield MinMax.findBestNode[Node](initial, 5, eval, children)
+			val result = for (n <- 0 until 1000) yield MinMax.findBestNode[Node](initial, new NodeRules, HyperParameters(5))
 			val set = result.map(r => r.bestChilds.head).toSet
 			assert(set contains child1)
 			assert(set contains child2)
@@ -90,12 +86,12 @@ class MinMaxTest extends AlgoTest {
 		// - O -
 		// - - O
 		val side = Circle
-		val adapter = new MinMaxTTT(side)
+		val rules = new TicTacToeRules(side)
 		val gridToTest = initialGrid.updated(0, Cross).updated(2, Cross).updated(4, Circle).updated(8, Circle)
 
 		// Do it 10 times to make sure there is no random result
 		for (i <- 0 to 10) {
-			val result = MinMax.findBestNode[Grid](gridToTest, 20, adapter.eval, adapter.children)
+			val result = MinMax.findBestNode[Grid](gridToTest, rules, HyperParameters(20))
 
 			assert(!result.bestChilds.isEmpty)
 			assert(result.bestChilds.head === gridToTest.updated(1, Circle))
@@ -107,12 +103,12 @@ class MinMaxTest extends AlgoTest {
 		// O O -
 		// X - -
 		val side = Cross
-		val adapter = new MinMaxTTT(side)
+		val rules = new TicTacToeRules(side)
 		val gridToTest = initialGrid.updated(0, Cross).updated(2, Circle).updated(3, Circle).updated(4, Circle).updated(6, Cross)
 
 		// Do it 10 times to make sure there is no random result
 		for (i <- 0 to 10) {
-			val result = MinMax.findBestNode[Grid](gridToTest, 20, adapter.eval, adapter.children)
+			val result = MinMax.findBestNode[Grid](gridToTest, rules, HyperParameters(20))
 
 			assert(!result.bestChilds.isEmpty)
 			assert(result.bestChilds.head === gridToTest.updated(5, Cross))
@@ -122,13 +118,13 @@ class MinMaxTest extends AlgoTest {
 	test("test with tic tac toe : brain vs min max") {
 		// Do it 10 times to make sure there is no random result
 		for (i <- 0 to 10) {
-			val result = play(Circle, initialGrid, playerMinMax, TicTacToeBrain.bestMove)
+			val result = TicTacToeAutoPlayer.play(Circle, initialGrid, TicTacToeAutoPlayer.minMaxPlayer, TicTacToeBrain.bestMove)
 			if (result._1 == Cross) {
 				result._2.reverse.foreach { grid => println(gridToString(grid)) }
 				fail("MinMax was defeated by the brain when playing 1st")
 			}
 
-			val result2 = play(Circle, initialGrid, TicTacToeBrain.bestMove, playerMinMax)
+			val result2 = TicTacToeAutoPlayer.play(Circle, initialGrid, TicTacToeBrain.bestMove, TicTacToeAutoPlayer.minMaxPlayer)
 			if (result2._1 == Circle) {
 				result2._2.reverse.foreach { grid => println(gridToString(grid)) }
 				fail("MinMax was defeated by the brain when playing 2nd")

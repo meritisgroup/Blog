@@ -1,29 +1,24 @@
 package algo
 
 import scala.util.Random
+import TreeSearchAlgo._
 
 
 object MinMax {
 
-	type EvalutionFct[Node] = (Node, Boolean) => Double
+	def findBestNode[Node](initial: Node, rules: GameRules[Node], hyper: HyperParameters): SearchResult[Node] = {
 
-	type ChildrenFct[Node] = (Node, Boolean) => Seq[Node]
-
-	case class Result[Node](value: Double, bestChilds: List[Node])
-
-	def findBestNode[Node](initialNode: Node, maxDepth: Int, eval: EvalutionFct[Node], children: ChildrenFct[Node]): Result[Node] = {
-
-		def rec(node: Node, depth: Int, maximize: Boolean): Result[Node] = {
+		def rec(node: Node, depth: Int, maximize: Boolean): SearchResult[Node] = {
 			if (depth == 0) {
 				// If we reached the initial depth, just evaluate the node
-				Result(eval(node, maximize), Nil)
+				SearchResult(rules.evaluate(node, maximize), Nil)
 
 			} else {
-				val nodeChildren = children(node, maximize)
+				val nodeChildren = rules.getChildren(node, maximize)
 
 				if (nodeChildren.isEmpty) {
 					// If the node has no children, evaluation is accurate
-					Result(eval(node, maximize), Nil)
+					SearchResult(rules.evaluate(node, maximize), Nil)
 
 				} else {
 					// Find related score for all children
@@ -42,12 +37,12 @@ object MinMax {
 					val bestChild = if (bestChildren.size == 1) bestChildren.head
 									else bestChildren(Random.nextInt(bestChildren.size))
 						
-					Result(bestValue, bestChild._1 :: bestChild._2.bestChilds)
+					SearchResult(bestValue, bestChild._1 :: bestChild._2.bestChilds)
 				}
 			}
 		}
 
-		rec(initialNode, maxDepth, true)
+		rec(initial, hyper.maxDepth, true)
 	}
 
 }

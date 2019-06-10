@@ -11,13 +11,17 @@ sealed trait Color {
 }
 
 case object White extends Color {
+
 	val unary_! = Black
 	override val hashCode = 1
+
 }
 
 case object Black extends Color {
+
 	val unary_! = White
 	override val hashCode = 2
+
 }
 
 
@@ -75,5 +79,56 @@ case class Piece(color: Color, role: Role) {
 
 	def is(c: Color) = c == color
 	def is(r: Role) = r == role
+
+	override lazy val hashCode = role.hashCode * 2 + color.hashCode
+
+}
+
+
+sealed trait Direction {
+
+	def apply(at: Pos): Option[Pos]
+	def perpendiculars: List[Direction]
+
+}
+
+case object UpAndLeft extends Direction {
+
+	def apply(at: Pos) = at.upLeft
+	lazy val perpendiculars = List(UpAndLeft, UpAndRight, DownAndLeft)
+	override val hashCode = 1
+
+}
+
+case object UpAndRight extends Direction {
+
+	def apply(at: Pos) = at.upRight
+	lazy val perpendiculars = List(UpAndRight, UpAndLeft, DownAndRight)
+	override val hashCode = 2
+
+}
+
+case object DownAndLeft extends Direction {
+
+	def apply(at: Pos) = at.downLeft
+	lazy val perpendiculars = List(DownAndLeft, UpAndLeft, DownAndRight)
+	override val hashCode = 3
+
+}
+
+case object DownAndRight extends Direction {
+
+	def apply(at: Pos) = at.downRight
+	lazy val perpendiculars = List(DownAndRight, UpAndLeft, DownAndRight)
+	override val hashCode = 4
+
+}
+
+object Direction {
+
+	val whitePawnMoves: List[Direction] = List(UpAndLeft, UpAndRight)
+	val blackPawnMoves: List[Direction] = List(DownAndLeft, DownAndRight)
+
+	val all: List[Direction] = List(UpAndLeft, UpAndRight, DownAndLeft, DownAndRight)
 
 }

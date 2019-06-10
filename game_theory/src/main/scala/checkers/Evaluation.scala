@@ -7,7 +7,7 @@ object Evaluation {
 	val queenValue = 4.0
 	val pawnSideWeight = 1.5
 
-	def evaluate(board: Board, side: Color): Double = {
+	def evaluate(moves: Moves): Double = {
 		def pawnWeight(pos: Pos): Double = {
 			if (pos.m >= 41
 					|| pos.m <= 10
@@ -22,17 +22,16 @@ object Evaluation {
 			case Queen => queenValue
 		}
 
-		val gameStatus = Move.win(board, side)
-
-		if (gameStatus == Won) {
-			Double.MaxValue
-		} else if (gameStatus == Lost) {
-			Double.MinValue
+		if (moves.win == Won) {
+			1.0
+		} else if (moves.win == Lost) {
+			-1.0
 		} else {
-			board.pieces.foldLeft(0.0)((acc, elt) => {
-				if (elt._2.color == side) acc + evaluateEach(elt._1, elt._2)
+			val result = moves.current.pieces.foldLeft(0.0)((acc, elt) => {
+				if (elt._2.color == moves.sideToPlay) acc + evaluateEach(elt._1, elt._2)
 				else acc - evaluateEach(elt._1, elt._2)
 			})
+			result / 100.0
 		}
 	}
 

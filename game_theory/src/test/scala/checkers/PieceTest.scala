@@ -24,7 +24,6 @@ class PieceTest extends CheckersTest {
 		assert(Pos.posAt(m).get.downRight === dr)
 		assert(Pos.posAt(m).get.upRight === ur)
 		assert(Pos.posAt(m).get.upLeft === ul)
-
 	}
 
 	test("pos down/up left/right neighbors") {

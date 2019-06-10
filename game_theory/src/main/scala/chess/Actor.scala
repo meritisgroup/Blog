@@ -31,7 +31,8 @@ case class Actor(piece: Piece, pos: Pos, board: Board) {
 			case _ => list
 		}
 
-		dirs flatMap { dir => rec(pos, dir, Nil) } flatten
+		val result = dirs.flatMap { dir => rec(pos, dir, Nil) }
+		result.flatten
 	}
 
 	def shortRange(dirs: Directions): List[Move] = {

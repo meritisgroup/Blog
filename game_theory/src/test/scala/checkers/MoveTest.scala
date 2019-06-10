@@ -18,14 +18,14 @@ class MoveTest extends CheckersTest {
 
 		val board = buildBoard(Map(piece -> List(fromBlack),
 									Piece(White, Pawn) -> List(fromWhite)))
-		val moves1 = Move.legalMoves(board, Black)
+		val moves1 = new Moves(board, Black).legalMoves
 		
 		assert(moves1.size === 2)
 		assert(moves1.map(move => move.piece).toSet === Set(piece))
 		assert(moves1.map(move => move.captureCount).toSet === Set(0))
 		checkTo(Black, fromBlack, List(22, 23), moves1)
 
-		val moves2 = Move.legalMoves(board, White)
+		val moves2 = new Moves(board, White).legalMoves
 
 		assert(moves2.size === 1)
 		checkTo(White, fromWhite, List(30), moves2)
@@ -36,7 +36,7 @@ class MoveTest extends CheckersTest {
 		val from = 18
 
 		val board = buildBoard(Map(piece -> List(from)))
-		val moves = Move.legalMoves(board, Black)
+		val moves = new Moves(board, Black).legalMoves
 
 		assert(moves.size === 15)
 		assert(moves.map(move => move.piece).toSet === Set(piece))
@@ -50,7 +50,7 @@ class MoveTest extends CheckersTest {
 
 		val board = buildBoard(Map(piece -> List(from),
 									Piece(White, Pawn) -> List(22, 13)))
-		val moves = Move.legalMoves(board, Black).filter(m => m.captureCount > 0)
+		val moves = new Moves(board, Black).legalMoves.filter(m => m.captureCount > 0)
 
 		assert(moves.size === 2)
 		assert(moves.map(move => move.piece).toSet === Set(piece))
@@ -66,7 +66,7 @@ class MoveTest extends CheckersTest {
 
 		val board = buildBoard(Map(piece -> List(from),
 									Piece(White, Pawn) -> List(22, 13, 14)))
-		val moves = Move.legalMoves(board, Black).filter(m => m.captureCount > 0)
+		val moves = new Moves(board, Black).legalMoves.filter(m => m.captureCount > 0)
 
 		assert(moves.size === 1)
 		assert(moves.map(move => move.piece).toSet === Set(piece))
@@ -83,7 +83,7 @@ class MoveTest extends CheckersTest {
 
 		val board = buildBoard(Map(piece -> List(from),
 									Piece(Black, Pawn) -> List(32, 44)))
-		val moves = Move.legalMoves(board, White).filter(m => m.captureCount > 0)
+		val moves = new Moves(board, White).legalMoves.filter(m => m.captureCount > 0)
 
 		assert(moves.size === 4)
 		assert(moves.map(move => move.piece).toSet === Set(piece))
@@ -103,7 +103,7 @@ class MoveTest extends CheckersTest {
 
 		val board = buildBoard(Map(piece -> List(from),
 									Piece(Black, Pawn) -> List(39, 28, 7, 30)))
-		val moves = Move.legalMoves(board, White).filter(m => m.captureCount > 0)
+		val moves = new Moves(board, White).legalMoves.filter(m => m.captureCount > 0)
 
 		assert(moves.size === 1)
 		assert(moves.map(move => move.captureCount).toSet === Set(4))
@@ -117,7 +117,7 @@ class MoveTest extends CheckersTest {
 
 		val board = buildBoard(Map(piece -> List(from),
 									Piece(White, Pawn) -> List(30, 29, 23, 38, 39)))
-		val moves = Move.legalMoves(board, Black).filter(m => m.captureCount > 0)
+		val moves = new Moves(board, Black).legalMoves.filter(m => m.captureCount > 0)
 
 		assert(moves.size === 1)
 		assert(moves.map(move => move.captureCount).toSet === Set(4))
@@ -127,7 +127,7 @@ class MoveTest extends CheckersTest {
 
 	test("pawn promotion") {
 		val board1 = buildBoard(Map(Piece(White, Pawn) -> List(7)))
-		val moves1 = Move.legalMoves(board1, White)
+		val moves1 = new Moves(board1, White).legalMoves
 
 		assert(moves1.size === 2)
 		assert(moves1.flatMap(move => move.after.pieces.values).toSet === Set(Piece(White, Queen)))
@@ -135,7 +135,7 @@ class MoveTest extends CheckersTest {
 
 		val board2 = buildBoard(Map(Piece(White, Pawn) -> List(12),
 									Piece(Black, Pawn) -> List(7)))
-		val moves2 = Move.legalMoves(board2, White).filter(m => m.captureCount > 0)
+		val moves2 = new Moves(board2, White).legalMoves.filter(m => m.captureCount > 0)
 
 		assert(moves2.size === 1)
 		assert(moves2.flatMap(move => move.after.pieces.values).toSet === Set(Piece(White, Queen)))
@@ -143,27 +143,27 @@ class MoveTest extends CheckersTest {
 
 		val board3 = buildBoard(Map(Piece(White, Pawn) -> List(11),
 									Piece(Black, Pawn) -> List(7, 8)))
-		val moves3 = Move.legalMoves(board3, White).filter(m => m.captureCount > 0)
+		val moves3 = new Moves(board3, White).legalMoves.filter(m => m.captureCount > 0)
 
 		assert(moves3.size === 1)
 		assert(moves3.flatMap(move => move.after.pieces.values).toSet === Set(Piece(White, Pawn)))
 		checkTo(White, 11, List(13), moves3)
 	}
 
-	test("win") {
-		assert(Move.win(Board.init, White) === Ongoing)
-		assert(Move.win(Board.init, Black) === Ongoing)
+	test("won / lost status") {
+		assert(new Moves(Board.init, White).win === Ongoing)
+		assert(new Moves(Board.init, Black).win === Ongoing)
 
 		// Only white pawns
 		val board1 = buildBoard(Map(Piece(White, Pawn) -> List(37, 28, 19)))
-		assert(Move.win(board1, White) === Won)
-		assert(Move.win(board1, Black) === Lost)
+		assert(new Moves(board1, White).win === Won)
+		assert(new Moves(board1, Black).win === Lost)
 
 		// White pawns blocked
 		val board2 = buildBoard(Map(Piece(White, Pawn) -> List(26),
 									Piece(Black, Pawn) -> List(21, 17)))
-		assert(Move.win(board2, White) === Lost)
-		assert(Move.win(board2, Black) === Ongoing)
+		assert(new Moves(board2, White).win === Lost)
+		assert(new Moves(board2, Black).win === Ongoing)
 	}
 
 }
