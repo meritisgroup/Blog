@@ -10,13 +10,6 @@ abstract class GameRules[Node] {
 	// Order can be important depending on the algorithm
 	def getChildren(node: Node, maximize: Boolean): List[Node]
 
-	// Return the probability of each move
-	// The sum should be equal to 1
-	def expertPolicy(parent: Node, children: List[Node]): List[Double] = {
-		val probability = 1.0 / children.size
-		List.fill(children.size)(probability)
-	}
-
 }
 
 

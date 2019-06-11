@@ -26,11 +26,6 @@ class Moves(val current: Board, val sideToPlay: Color) {
 	lazy val win: Status = computeStatus
 	lazy val legalMoves: List[Move] = computeMoves
 
-	def whitePromoteFilter(pos: Pos): Boolean = (pos.m <= 5)
-	def blackPromoteFilter(pos: Pos): Boolean = (pos.m >= 46)
-
-	val promoteFilter: Pos => Boolean = if (sideToPlay == White) whitePromoteFilter else blackPromoteFilter
-
 	def computeStatus: Status = {
 		val count = current.pieces.foldLeft((0, 0))((acc, elt) => {
 			if (elt._2.color == sideToPlay) (acc._1 + 1, acc._2) else (acc._1, acc._2 + 1)
@@ -110,7 +105,21 @@ class Moves(val current: Board, val sideToPlay: Color) {
 		}
 	}
 
+	def whitePromoteFilter(pos: Pos): Boolean = (pos.m <= 5)
+	def blackPromoteFilter(pos: Pos): Boolean = (pos.m >= 46)
+
+	val promoteFilter: Pos => Boolean = if (sideToPlay == White) whitePromoteFilter else blackPromoteFilter
+
 	def promote(move: Move): Move = {
+		if (!promoteFilter(move.to)) {
+			move
+		} else {
+			val newBoard = move.after.replace(Piece(sideToPlay, Queen), move.to)
+			move.copy(after = newBoard.get)
+		}
+	}
+
+	/*def promote(move: Move): Move = {
 		if (!move.after.pieces.keys.exists(promoteFilter)) {
 			move
 		} else {
@@ -118,9 +127,9 @@ class Moves(val current: Board, val sideToPlay: Color) {
 				if (!promoteFilter(pos)) (pos, piece)
 				else (pos, Piece(sideToPlay, Queen))
 			}
-			move.copy(after = Board(newPieces))
+			move.copy(after = Board(newPieces, 0))
 		}
-	}
+	}*/
 
 	def promoteAll(moves: List[Move]): List[Move] = moves map promote
 

@@ -61,7 +61,8 @@ class CheckersBrainTest extends CheckersTest {
 
 	test("simple strategy : black won") {
 		val board = buildBoard(Map(Piece(White, Pawn) -> List(31, 34),
-									Piece(Black, Queen) -> List(9)))
+									Piece(Black, Queen) -> List(9),
+									Piece(Black, Pawn) -> List(24)))
 		val best = brainMM(Black).bestMove(board)
 
 		assert(!best._1.isEmpty)
@@ -166,7 +167,7 @@ class CheckersBrainTest extends CheckersTest {
 		logInfo(brainW, best)
 
 		assert(!best._1.isEmpty)
-		assert(brainW.expandCount.get === 190284)
+		assert(brainW.expandCount.get === 630400)
 
 		val brainB = brainAB(Black)
 		val best2 = brainB.bestMove(best._1.get.after)
@@ -175,7 +176,7 @@ class CheckersBrainTest extends CheckersTest {
 		logInfo(brainB, best2)
 
 		assert(!best2._1.isEmpty)
-		assert(brainB.expandCount.get === 102537)
+		assert(brainB.expandCount.get === 348897)
 	}
 
 }

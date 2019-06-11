@@ -1,4 +1,4 @@
-Test / parallelExecution := false
+//Test / parallelExecution := false
 Test / logBuffered := false
 
 lazy val root = (project in file("."))

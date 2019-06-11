@@ -126,6 +126,7 @@ class MoveTest extends CheckersTest {
 	}
 
 	test("pawn promotion") {
+		// Promote a single pawn
 		val board1 = buildBoard(Map(Piece(White, Pawn) -> List(7)))
 		val moves1 = new Moves(board1, White).legalMoves
 
@@ -133,21 +134,25 @@ class MoveTest extends CheckersTest {
 		assert(moves1.flatMap(move => move.after.pieces.values).toSet === Set(Piece(White, Queen)))
 		checkTo(White, 7, List(1, 2), moves1)
 
+		// Promote a single pawn after a capture
 		val board2 = buildBoard(Map(Piece(White, Pawn) -> List(12),
-									Piece(Black, Pawn) -> List(7)))
+									Piece(Black, Pawn) -> List(7, 5)))
 		val moves2 = new Moves(board2, White).legalMoves.filter(m => m.captureCount > 0)
 
 		assert(moves2.size === 1)
-		assert(moves2.flatMap(move => move.after.pieces.values).toSet === Set(Piece(White, Queen)))
+		assert(moves2.flatMap(move => move.after.pieces.values).toSet === Set(Piece(White, Queen), Piece(Black, Pawn)))
 		checkTo(White, 12, List(1), moves2)
+		assert(moves2.head.after.pieces === buildBoard(Map(Piece(White, Queen) -> List(1), Piece(Black, Pawn) -> List(5))).pieces)
 
+		// Do not promote a pawn that does not end up on the last line
 		val board3 = buildBoard(Map(Piece(White, Pawn) -> List(11),
-									Piece(Black, Pawn) -> List(7, 8)))
+									Piece(Black, Pawn) -> List(7, 8, 5)))
 		val moves3 = new Moves(board3, White).legalMoves.filter(m => m.captureCount > 0)
 
 		assert(moves3.size === 1)
-		assert(moves3.flatMap(move => move.after.pieces.values).toSet === Set(Piece(White, Pawn)))
+		assert(moves3.flatMap(move => move.after.pieces.values).toSet === Set(Piece(White, Pawn), Piece(Black, Pawn)))
 		checkTo(White, 11, List(13), moves3)
+		assert(moves3.head.after.pieces === buildBoard(Map(Piece(White, Pawn) -> List(13), Piece(Black, Pawn) -> List(5))).pieces)
 	}
 
 	test("won / lost status") {
