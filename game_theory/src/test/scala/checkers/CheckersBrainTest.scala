@@ -147,36 +147,40 @@ class CheckersBrainTest extends CheckersTest {
 		assert(winner.get === White)
 	}
 
-	def logInfo(brain: CheckersBrain, best: (Option[Move], Double)) = {
+	def logInfo(brain: CheckersBrain, best: (Option[Move], Double), elapsedTime: Long) = {
 		val move = best._1
 		val score = best._2
 
-		print(move.get.from.m + " x " + move.get.to.m)
-		print(" by expanding " + brain.expandCount.get + " nodes")
-		println(" from scores within " + brain.evaluationsSet.get)
+		println(move.get.from.m + " x " + move.get.to.m)
+		println("by expanding " + brain.expandCount.get + " nodes with computation time " + (elapsedTime/1000) + " sec")
+		println("from scores within " + brain.evaluationsSet.get)
 	}
 
 	// non regresser le nb de noauds
 	// mesurer le nb de getChildren à la place d'évaluation, plus pertinent
 
-	test("game start") {
+	test("game start - 1st white move") {
 		val brainW = brainAB(White)
+		val startTime = System.currentTimeMillis()
 		val best = brainW.bestMove(Board.init)
+		val elapsedTime = System.currentTimeMillis() - startTime
 
-		println("first white move:")
-		logInfo(brainW, best)
+		logInfo(brainW, best, elapsedTime)
 
 		assert(!best._1.isEmpty)
-		assert(brainW.expandCount.get === 630400)
+		assert(brainW.expandCount.get === 1818247)
+	}
 
+	test("game start - 2nd black move") {
 		val brainB = brainAB(Black)
-		val best2 = brainB.bestMove(best._1.get.after)
+		val startTime = System.currentTimeMillis()
+		val best = brainB.bestMove(Board.init.move(Pos.posAt(35).get, Pos.posAt(30).get).get)
+		val elapsedTime = System.currentTimeMillis() - startTime
 
-		println("reply from black:")
-		logInfo(brainB, best2)
+		logInfo(brainB, best, elapsedTime)
 
-		assert(!best2._1.isEmpty)
-		assert(brainB.expandCount.get === 348897)
+		assert(!best._1.isEmpty)
+		assert(brainB.expandCount.get === 1018589)
 	}
 
 }
