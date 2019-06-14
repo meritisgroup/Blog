@@ -16,27 +16,41 @@ class CheckersRules(log: Boolean) extends GameRules[CheckersNode] {
 
 	val count = new AtomicInteger(0)
 	val evaluationsSet = scala.collection.mutable.SortedSet[Double]()
+	val cacheWhite = scala.collection.mutable.Map[Long, Moves]()
+	val cacheBlack = scala.collection.mutable.Map[Long, Moves]()
+
+	def createNode(lastMove: Move, sideToPlay: Color): CheckersNode = {
+		if (log) {
+			count.incrementAndGet
+		}
+
+		val board = lastMove.after
+		val cache = if (sideToPlay.white) cacheWhite else cacheBlack
+
+		if (cache contains board.hash) {
+			CheckersNode(board, Some(lastMove), cache(board.hash))
+		} else {
+			val node = CheckersNode(board, Some(lastMove), new Moves(board, sideToPlay))
+			cache += (board.hash -> node.nextMoves)
+			node
+		}
+	}
 
 	override def evaluate(node: CheckersNode, maximize: Boolean): Double = {
 		val result = Evaluation.evaluate(node.nextMoves)
 		if (log) {
-			count.incrementAndGet
 			evaluationsSet += result
 		}
 		result
 	}
 
 	override def getChildren(node: CheckersNode, maximize: Boolean): List[CheckersNode] = {
-		if (log) {
-			count.incrementAndGet
-		}
-
 		if (node.nextMoves.win == Won || node.nextMoves.win == Lost) {
 			Nil
 		} else {
 			val otherSide = !node.nextMoves.sideToPlay
 			val moves = node.nextMoves.legalMoves
-			val nodes = moves map { move => CheckersNode(move.after, Some(move), new Moves(move.after, otherSide)) }
+			val nodes = moves map { move => createNode(move, otherSide) }
 
 			if (maximize) nodes.sortBy { node => - Evaluation.evaluate(node.nextMoves) }
 			else nodes.sortBy { node => Evaluation.evaluate(node.nextMoves) }
