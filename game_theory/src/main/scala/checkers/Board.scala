@@ -45,7 +45,7 @@ case class Board(pieces: Map[Pos, Piece], hash: Long) {
 	}
 
 	def updateHash(acc: Long, elt: (Pos, Option[Piece])): Long = {
-		ZobristHash.replace(acc, elt._1, pieces.get(elt._1), elt._2)
+		ZobristHashCheckers.replace(acc, elt._1, pieces.get(elt._1), elt._2)
 	}
 
 }
@@ -58,12 +58,12 @@ object Board {
 		val whitePart = for (m <- 31 to 50) yield (posAt(m).get, Piece(White, Pawn))
 
 		val map = (blackPart ++ whitePart).toMap
-		Board(map, ZobristHash.computeHash(map))
+		Board(map, ZobristHashCheckers.computeHash(map))
 	}
 
 	def empty: Board = {
 		val map = Map.empty[Pos, Piece]
-		Board(map, ZobristHash.computeHash(map))
+		Board(map, ZobristHashCheckers.computeHash(map))
 	}
 
 }

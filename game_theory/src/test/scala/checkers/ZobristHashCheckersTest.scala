@@ -1,34 +1,34 @@
 package checkers
 
 
-class ZobristHashTest extends CheckersTest {
+class ZobristHashCheckersTest extends CheckersTest {
 	
 	test("hash with Board.place") {
 		val firstBoard = Board.init
 		val nextBoard = firstBoard.place(Piece(White, Pawn), Pos.posAt(28).get).get
 
-		assert(nextBoard.hash === ZobristHash.computeHash(nextBoard.pieces))
+		assert(nextBoard.hash === ZobristHashCheckers.computeHash(nextBoard.pieces))
 	}
 
 	test("hash with Board.replace") {
 		val firstBoard = Board.init
 		val nextBoard = firstBoard.replace(Piece(White, Queen), Pos.posAt(31).get).get
 
-		assert(nextBoard.hash === ZobristHash.computeHash(nextBoard.pieces))
+		assert(nextBoard.hash === ZobristHashCheckers.computeHash(nextBoard.pieces))
 	}
 
 	test("hash with Board.remove") {
 		val firstBoard = Board.init
 		val nextBoard = firstBoard.remove(Pos.posAt(13).get).get
 
-		assert(nextBoard.hash === ZobristHash.computeHash(nextBoard.pieces))
+		assert(nextBoard.hash === ZobristHashCheckers.computeHash(nextBoard.pieces))
 	}
 
 	test("hash with Board.move") {
 		val firstBoard = Board.init
 		val nextBoard = firstBoard.move(Pos.posAt(32).get, Pos.posAt(28).get).get
 
-		assert(nextBoard.hash === ZobristHash.computeHash(nextBoard.pieces))
+		assert(nextBoard.hash === ZobristHashCheckers.computeHash(nextBoard.pieces))
 	}
 
 	test("hash with Board.take") {
@@ -38,7 +38,7 @@ class ZobristHashTest extends CheckersTest {
 
 		val nextBoard = firstBoard2.take(Pos.posAt(33).get, Pos.posAt(22).get, Pos.posAt(28).get).get
 
-		assert(nextBoard.hash === ZobristHash.computeHash(nextBoard.pieces))
+		assert(nextBoard.hash === ZobristHashCheckers.computeHash(nextBoard.pieces))
 	}
 
 }

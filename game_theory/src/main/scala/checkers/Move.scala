@@ -25,6 +25,7 @@ class Moves(val current: Board, val sideToPlay: Color) {
 
 	lazy val win: Status = computeStatus
 	lazy val legalMoves: List[Move] = computeMoves
+	lazy val hash: Long = Moves.computeHash(current, sideToPlay)
 
 	def computeStatus: Status = {
 		val count = current.pieces.foldLeft((0, 0))((acc, elt) => {
@@ -119,18 +120,6 @@ class Moves(val current: Board, val sideToPlay: Color) {
 		}
 	}
 
-	/*def promote(move: Move): Move = {
-		if (!move.after.pieces.keys.exists(promoteFilter)) {
-			move
-		} else {
-			val newPieces = for ((pos, piece) <- move.after.pieces) yield {
-				if (!promoteFilter(pos)) (pos, piece)
-				else (pos, Piece(sideToPlay, Queen))
-			}
-			move.copy(after = Board(newPieces, 0))
-		}
-	}*/
-
 	def promoteAll(moves: List[Move]): List[Move] = moves map promote
 
 	def computeMoves: List[Move] = {
@@ -156,6 +145,15 @@ class Moves(val current: Board, val sideToPlay: Color) {
 			val maxCaptureCount = allCapture.maxBy { move => move.captureCount }.captureCount
 			allCapture.filter(move => move.captureCount == maxCaptureCount).toList
 		}
+	}
+
+}
+
+
+object Moves {
+
+	def computeHash(current: Board, sideToPlay: Color): Long = {
+		ZobristHashCheckers.addSide(current.hash, sideToPlay)
 	}
 
 }

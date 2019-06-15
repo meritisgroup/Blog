@@ -2,56 +2,50 @@ package checkers
 
 import java.util.concurrent.atomic.AtomicInteger
 import scala.util.Random
+import collection.JavaConverters._
 import algo.HyperParameters
 import algo.TreeSearchAlgo._
 import algo.GameRules
-import algo.MinMax
 import algo.AlphaBeta
 
 
-case class CheckersNode(current: Board, lastMove: Option[Move], nextMoves: Moves)
-
-
-class CheckersRules(log: Boolean) extends GameRules[CheckersNode] {
+class CheckersRules(log: Boolean) extends GameRules[Moves] {
 
 	val count = new AtomicInteger(0)
 	val evaluationsSet = scala.collection.mutable.SortedSet[Double]()
-	val cacheWhite = scala.collection.mutable.Map[Long, Moves]()
-	val cacheBlack = scala.collection.mutable.Map[Long, Moves]()
 
-	def createNode(lastMove: Move, sideToPlay: Color): CheckersNode = {
-		if (log) {
-			count.incrementAndGet
-		}
+	val cache = new java.util.concurrent.ConcurrentHashMap[Long, Moves]().asScala
 
-		val board = lastMove.after
-		val cache = if (sideToPlay.white) cacheWhite else cacheBlack
+	def createNode(board: Board, sideToPlay: Color): Moves = {
+		val hash = Moves.computeHash(board, sideToPlay)
 
-		if (cache contains board.hash) {
-			CheckersNode(board, Some(lastMove), cache(board.hash))
+		if (cache contains hash) {
+			cache(hash)
 		} else {
-			val node = CheckersNode(board, Some(lastMove), new Moves(board, sideToPlay))
-			cache += (board.hash -> node.nextMoves)
+			if (log) count.incrementAndGet
+
+			val node = new Moves(board, sideToPlay)
+			cache += (node.hash -> node)
 			node
 		}
 	}
 
-	override def evaluate(node: CheckersNode, maximize: Boolean): Double = {
-		val result = Evaluation.evaluate(node.nextMoves)
+	override def evaluate(node: Moves, maximize: Boolean): Double = {
+		val result = Evaluation.evaluate(node)
 		if (log) {
 			evaluationsSet += result
 		}
 		result
 	}
 
-	override def getChildren(node: CheckersNode, maximize: Boolean): List[CheckersNode] = {
-		if (node.nextMoves.win == Won || node.nextMoves.win == Lost) {
+	override def getChildren(node: Moves, maximize: Boolean): List[Moves] = {
+		if (node.win == Won || node.win == Lost) {
 			Nil
 		} else {
-			val otherSide = !node.nextMoves.sideToPlay
-			val moves = node.nextMoves.legalMoves
+			val otherSide = !node.sideToPlay
+			val moves = node.legalMoves
 
-			moves map { move => createNode(move, otherSide) }
+			moves map { move => createNode(move.after, otherSide) }
 		}
 	}
 
@@ -59,7 +53,7 @@ class CheckersRules(log: Boolean) extends GameRules[CheckersNode] {
 
 
 class CheckersBrain(side: Color,
-					searchFct: BestNodeFct[CheckersNode] = AlphaBeta.findBestNode[CheckersNode],
+					searchFct: BestNodeFct[Moves] = AlphaBeta.findBestNode[Moves],
 					hyper: HyperParameters = HyperParameters(10),
 					log: Boolean = true) {
 
@@ -76,18 +70,19 @@ class CheckersBrain(side: Color,
 	}
 
 	def bestMove(board: Board): (Option[Move], Double) = {
-		val initialNode = CheckersNode(board, None, new Moves(board, side))
+		val initialNode = new Moves(board, side)
 
-		if (initialNode.nextMoves.legalMoves.size == 1) {
-			val uniqueMove = initialNode.nextMoves.legalMoves.head
+		if (initialNode.legalMoves.size == 1) {
+			val uniqueMove = initialNode.legalMoves.head
 			(Some(uniqueMove), rules.evaluate(initialNode, true))
 
 		} else {
 			val result = searchFct(initialNode, rules, hyper)
 
-			val bestNode = if (result.bestChilds.isEmpty) None else result.bestChilds.head.lastMove
+			val bestNode = if (result.bestChilds.isEmpty) None else Some(result.bestChilds.head)
+			val move = bestNode flatMap { node => initialNode.legalMoves.find(move => move.after == node.current) }
 
-			(bestNode, result.value)
+			(move, result.value)
 		}
 	}
 
