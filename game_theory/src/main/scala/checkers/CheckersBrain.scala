@@ -50,10 +50,8 @@ class CheckersRules(log: Boolean) extends GameRules[CheckersNode] {
 		} else {
 			val otherSide = !node.nextMoves.sideToPlay
 			val moves = node.nextMoves.legalMoves
-			val nodes = moves map { move => createNode(move, otherSide) }
 
-			if (maximize) nodes.sortBy { node => - Evaluation.evaluate(node.nextMoves) }
-			else nodes.sortBy { node => Evaluation.evaluate(node.nextMoves) }
+			moves map { move => createNode(move, otherSide) }
 		}
 	}
 

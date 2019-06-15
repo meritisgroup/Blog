@@ -83,44 +83,48 @@ class CheckersBrainTest extends CheckersTest {
 	}
 
 	// See https://en.wikipedia.org/wiki/Draughts#General_rules
-	test("complicated strategy : 4 first moves") {
+	trait ComplicatedStrategyBoard {
 		val board = buildBoard(Map(Piece(White, Pawn) -> List(26, 31, 32, 28, 33, 29, 38, 48, 40),
 									Piece(Black, Pawn) -> List(7, 11, 17, 22, 13, 20, 24, 35, 41)))
+	}
 
-		val best = brainAB(White).bestMove(board)
+	test("complicated strategy : 4 first moves") {
+		new ComplicatedStrategyBoard {
+			val best = brainAB(White).bestMove(board)
 
-		assert(!best._1.isEmpty)
-		val move = best._1.get
-		assert((move.from.m, move.to.m, move.captureCount) === (26, 21, 0),
-			"1st move is not the best one : " + move)
+			assert(!best._1.isEmpty)
+			val move = best._1.get
+			assert((move.from.m, move.to.m, move.captureCount) === (26, 21, 0),
+				"1st move is not the best one : " + move)
 
-		val best2 = brainAB(Black).bestMove(move.after)
+			val best2 = brainAB(Black).bestMove(move.after)
 
-		assert(!best2._1.isEmpty)
-		val move2 = best2._1.get
-		assert((move2.from.m, move2.to.m, move2.captureCount) === (17, 37, 2),
-			"2nd move is not the best one : " + move2)
+			assert(!best2._1.isEmpty)
+			val move2 = best2._1.get
+			assert((move2.from.m, move2.to.m, move2.captureCount) === (17, 37, 2),
+				"2nd move is not the best one : " + move2)
 
-		val best3 = brainAB(White).bestMove(move2.after)
+			val best3 = brainAB(White).bestMove(move2.after)
 
-		assert(!best3._1.isEmpty)
-		val move3 = best3._1.get
-		assert((move3.from.m, move3.to.m, move3.captureCount) === (28, 6, 2),
-			"3rd move is not the best one : " + move3)
+			assert(!best3._1.isEmpty)
+			val move3 = best3._1.get
+			assert((move3.from.m, move3.to.m, move3.captureCount) === (28, 6, 2),
+				"3rd move is not the best one : " + move3)
 
-		val best4 = brainAB(Black).bestMove(move3.after)
+			val best4 = brainAB(Black).bestMove(move3.after)
 
-		assert(!best4._1.isEmpty)
-		val move4 = best4._1.get
-		assert((move4.from.m, move4.to.m, move4.captureCount) === (37, 39, 2),
-			"4th move is not the best one : " + move4)
+			assert(!best4._1.isEmpty)
+			val move4 = best4._1.get
+			assert((move4.from.m, move4.to.m, move4.captureCount) === (37, 39, 2),
+				"4th move is not the best one : " + move4)
+		}
 	}
 
 	def checkMoves(moves: List[Move], refs: List[(Int, Int, Int)]) = {
 		for (i <- 0 until refs.size) {
-			assert(moves.size > i, "missing move at step " + i)
+			assert(moves.size > i, "missing move at step " + (i+1))
 			assert((moves(i).from.m, moves(i).to.m, moves(i).captureCount) === (refs(i)._1, refs(i)._2, refs(i)._3),
-				"Move at step " + i + " is not the best one : " + moves(i))
+				"Move at step " + (i+1) + " is not the best one : " + moves(i))
 		}
 		assert(moves.size === refs.size)
 	}
@@ -128,23 +132,22 @@ class CheckersBrainTest extends CheckersTest {
 	// Depth should be 10 and then, it is too slow...
 	// At depth 8, algo does not find the best move
 	test("complicated strategy : all moves until the end") {
-		val board = buildBoard(Map(Piece(White, Pawn) -> List(26, 31, 32, 28, 33, 29, 38, 48, 40),
-									Piece(Black, Pawn) -> List(7, 11, 17, 22, 13, 20, 24, 35, 41)))
+		new ComplicatedStrategyBoard {
+			val player1 = brainAB(White)
+			val player2 = brainAB(Black)
 
-		val player1 = new CheckersBrain(White, AlphaBeta.findBestNode, HyperParameters(8))
-		val player2 = new CheckersBrain(Black, AlphaBeta.findBestNode, HyperParameters(8))
+			val result = autoPlay(White, board, player1, player2, false)
+			val winner = result._1
+			val moves = result._2
 
-		val result = autoPlay(White, board, player1, player2, false)
-		val winner = result._1
-		val moves = result._2
+			checkMoves(moves, List((26, 21, 0), (17, 37, 2),
+									(28, 6, 2), (37, 39, 2),
+									(6, 1, 0), (24, 42, 2),
+									(6, 43, 4), (35, 44, 0)))
 
-		checkMoves(moves, List((26, 21, 0), (17, 37, 2),
-								(28, 6, 2), (37, 39, 2),
-								(6, 1, 0), (24, 42, 2),
-								(6, 43, 4), (35, 44, 0)))
-
-		assert(winner.isDefined)
-		assert(winner.get === White)
+			assert(winner.isDefined)
+			assert(winner.get === White)
+		}
 	}
 
 	def logInfo(brain: CheckersBrain, best: (Option[Move], Double), elapsedTime: Long) = {
@@ -156,9 +159,6 @@ class CheckersBrainTest extends CheckersTest {
 		println("from scores within " + brain.evaluationsSet.get)
 	}
 
-	// non regresser le nb de noauds
-	// mesurer le nb de getChildren à la place d'évaluation, plus pertinent
-
 	test("game start - 1st white move") {
 		val brainW = brainAB(White)
 		val startTime = System.currentTimeMillis()
@@ -168,7 +168,7 @@ class CheckersBrainTest extends CheckersTest {
 		logInfo(brainW, best, elapsedTime)
 
 		assert(!best._1.isEmpty)
-		assert(brainW.expandCount.get === 1818247)
+		assert(brainW.expandCount.get === 2115267)
 	}
 
 	test("game start - 2nd black move") {
@@ -180,7 +180,7 @@ class CheckersBrainTest extends CheckersTest {
 		logInfo(brainB, best, elapsedTime)
 
 		assert(!best._1.isEmpty)
-		assert(brainB.expandCount.get === 1018589)
+		assert(brainB.expandCount.get === 1634679)
 	}
 
 }
