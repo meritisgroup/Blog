@@ -15,7 +15,7 @@ abstract class CheckersTest extends FunSuite {
 					log: Boolean = true, list: List[Move] = Nil): (Option[Color], List[Move]) = {
 
 		if (list.size >= 15) {
-			(None, list)
+			(None, list.reverse)
 		} else {
 			val result = player1.bestMove(board)
 
@@ -29,9 +29,9 @@ abstract class CheckersTest extends FunSuite {
 			}
 
 			if (status == Lost) {
-				(Some(side), move :: list)
+				(Some(side), (move :: list).reverse)
 			} else if (status == Won) {
-				(None, move :: list)
+				(None, (move :: list).reverse)
 			} else {
 				autoPlay(!side, nextBoard, player2, player1, log, move :: list)
 			}
