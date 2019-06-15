@@ -155,7 +155,7 @@ class CheckersBrainTest extends CheckersTest {
 		val score = best._2
 
 		println(move.get.from.m + " x " + move.get.to.m)
-		println("by expanding " + brain.expandCount.get + " nodes with computation time " + (elapsedTime/1000) + " sec")
+		println("by expanding " + brain.expandCount.get + " nodes with computation time " + (elapsedTime) + " msec")
 		println("from scores within " + brain.evaluationsSet.get)
 	}
 
@@ -168,11 +168,12 @@ class CheckersBrainTest extends CheckersTest {
 		logInfo(brainW, best, elapsedTime)
 
 		assert(!best._1.isEmpty)
-		assert(brainW.expandCount.get === 2115267)
+		assert(brainW.expandCount.get === 554224)
 	}
 
 	test("game start - 2nd black move") {
 		val brainB = brainAB(Black)
+
 		val startTime = System.currentTimeMillis()
 		val best = brainB.bestMove(Board.init.move(Pos.posAt(35).get, Pos.posAt(30).get).get)
 		val elapsedTime = System.currentTimeMillis() - startTime
@@ -180,7 +181,7 @@ class CheckersBrainTest extends CheckersTest {
 		logInfo(brainB, best, elapsedTime)
 
 		assert(!best._1.isEmpty)
-		assert(brainB.expandCount.get === 1634679)
+		assert(brainB.expandCount.get === 541684)
 	}
 
 }

@@ -1,7 +1,7 @@
 package algo
 
 
-abstract class GameRules[Node] {
+trait GameRules[Node] {
 
 	// Return an estimated value of the node (between -1.0 and +1.0)
 	def evaluate(node: Node, maximize: Boolean): Double
