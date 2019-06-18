@@ -28,12 +28,11 @@ class Moves(val current: Board, val sideToPlay: Color) {
 	lazy val hash: Long = Moves.computeHash(current, sideToPlay)
 
 	def computeStatus: Status = {
-		val count = current.pieces.foldLeft((0, 0))((acc, elt) => {
-			if (elt._2.color == sideToPlay) (acc._1 + 1, acc._2) else (acc._1, acc._2 + 1)
-		})
+		val countSideToPlay = current.pieces.foldLeft(0) { (acc, elt) => if (elt._2.color == sideToPlay) acc + 1 else acc }
+		val countOpponent = current.pieces.foldLeft(0) { (acc, elt) => if (elt._2.color != sideToPlay) acc + 1 else acc }
 
-		if (count._1 == 0) Lost
-		else if (count._2 == 0) Won
+		if (countSideToPlay == 0) Lost
+		else if (countOpponent == 0) Won
 		else if (legalMoves.isEmpty) Lost
 		else Ongoing
 	}

@@ -150,6 +150,14 @@ class CheckersBrainTest extends CheckersTest {
 		}
 	}
 
+	/*test("out of memory") {
+		val board = buildBoard(Map(Piece(White, Pawn) -> List(46, 47, 48, 49, 50, 41, 45, 36, 38, 39, 40, 33, 34, 35, 28),
+									Piece(Black, Pawn) -> List(1, 2, 3, 4, 6, 7, 8, 9, 10, 11, 13, 14, 15, 20, 26)))
+
+		val best = brainAB(Black).bestMove(board)
+		assert(!best._1.isEmpty)
+	}*/
+
 	def logInfo(brain: CheckersBrain, best: (Option[Move], Double), elapsedTime: Long) = {
 		val move = best._1
 		val score = best._2

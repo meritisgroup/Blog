@@ -10,19 +10,19 @@ case class Board(pieces: Map[Pos, Piece], hash: Long) {
 	def place(piece: Piece, at: Pos): Option[Board] = {
 		if (pieces contains at) None
 		else Some(copy(pieces = pieces + ((at, piece)),
-						hash = updateHash(hash, (at, Some(piece)))))
+						hash = updateHash(hash, at, Some(piece))))
 	}
 
 	def replace(piece: Piece, at: Pos): Option[Board] = {
 		if (!(pieces contains at)) None
-		else Some(copy(pieces = pieces - at + ((at, piece)),
-						hash = updateHash(hash, (at, Some(piece)))))
+		else Some(copy(pieces = pieces + ((at, piece)),
+						hash = updateHash(hash, at, Some(piece))))
 	}
 
 	def remove(at: Pos): Option[Board] = {
 		pieces get at map { piece =>
 			copy(pieces = pieces - at,
-					hash = updateHash(hash, (at, None)))
+					hash = updateHash(hash, at, None))
 		}
 	}
 
@@ -30,7 +30,10 @@ case class Board(pieces: Map[Pos, Piece], hash: Long) {
 		if (pieces contains dest) None
 		else pieces get orig map { piece =>
 			copy(pieces = pieces - orig + ((dest, piece)),
-					hash = List((orig, None), (dest, Some(piece))).foldLeft(hash)(updateHash))
+					hash = { 
+						val hash1 = updateHash(hash, orig, None)
+						updateHash(hash1, dest, Some(piece))
+					} )
 		}
 	}
 
@@ -38,14 +41,18 @@ case class Board(pieces: Map[Pos, Piece], hash: Long) {
 		if ((pieces contains taken) && !(pieces contains dest) && (pieces contains orig)) {
 			pieces get orig map { piece =>
 				copy(pieces = pieces - orig - taken + ((dest, piece)),
-						hash = List((orig, None), (taken, None), (dest, Some(piece))).foldLeft(hash)(updateHash))
+						hash = {
+							val hash1 = updateHash(hash, orig, None)
+							val hash2 = updateHash(hash1, taken, None)
+							updateHash(hash2, dest, Some(piece))
+						} )
 			}
 
 		} else None
 	}
 
-	def updateHash(acc: Long, elt: (Pos, Option[Piece])): Long = {
-		ZobristHashCheckers.replace(acc, elt._1, pieces.get(elt._1), elt._2)
+	def updateHash(acc: Long, pos: Pos, piece: Option[Piece]): Long = {
+		ZobristHashCheckers.replace(acc, pos, pieces.get(pos), piece)
 	}
 
 }

@@ -61,6 +61,7 @@ object Pos {
 	def col(m: Int): Int = ((m - 1) % 5) * 2 + ((row(m) + 1) % 2)
 	def manoury(row: Int, col: Int): Option[Int] = {
 		if (row < 0 || row > 9 || col < 0 || col > 9) None
+		else if ((row % 2 == 0 && col % 2 == 0) || (row % 2 == 1 && col % 2 == 1)) None
 		else Some(row * 5 + col / 2 + 1)
 	}
 

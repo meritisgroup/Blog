@@ -17,6 +17,10 @@ class PieceTest extends CheckersTest {
 		checkRowCol(23, 4, 5)
 		checkRowCol(45, 8, 9)
 		checkRowCol(50, 9, 8)
+
+		assert(Pos.manoury(-1, 5) === None)
+		assert(Pos.manoury(0, 0) === None)
+		assert(Pos.manoury(5, 1) === None)
 	}
 
 	def checkNeighbors(m: Int, dl: Option[Pos], dr: Option[Pos], ur: Option[Pos], ul: Option[Pos]) = {
