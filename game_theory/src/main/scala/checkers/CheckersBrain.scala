@@ -13,6 +13,7 @@ class CheckersRules(log: Boolean) extends GameRules[Moves] {
 
 	val count = new AtomicInteger(0)
 	val evaluationsSet = scala.collection.mutable.SortedSet[Double]()
+	val childrenCountAcc = new AtomicInteger(0)
 
 	val cache = new java.util.concurrent.ConcurrentHashMap[Long, Moves]().asScala
 
@@ -22,10 +23,14 @@ class CheckersRules(log: Boolean) extends GameRules[Moves] {
 		if (cache contains hash) {
 			cache(hash)
 		} else {
-			if (log) count.incrementAndGet
-
 			val node = new Moves(board, sideToPlay)
 			cache += (node.hash -> node)
+
+			if (log) {
+				count.incrementAndGet
+				childrenCountAcc.addAndGet(node.legalMoves.size)
+			}
+
 			node
 		}
 	}
@@ -52,10 +57,10 @@ class CheckersRules(log: Boolean) extends GameRules[Moves] {
 }
 
 
-class CheckersBrain(side: Color,
+class CheckersBrain(val side: Color,
 					searchFct: BestNodeFct[Moves] = AlphaBeta.findBestNode[Moves],
 					hyper: HyperParameters = HyperParameters(10),
-					log: Boolean = true) {
+					log: Boolean = false) {
 
 	val rules = new CheckersRules(log)
 
@@ -67,6 +72,11 @@ class CheckersBrain(side: Color,
 	def evaluationsSet: Option[Set[Double]] = {
 		if (!log) None
 		else Some(rules.evaluationsSet.toSet)
+	}
+
+	def branchingFactor: Option[Double] = {
+		if (!log) None
+		else Some(rules.childrenCountAcc.get.toDouble / rules.count.get)
 	}
 
 	def bestMove(board: Board): (Option[Move], Double) = {
