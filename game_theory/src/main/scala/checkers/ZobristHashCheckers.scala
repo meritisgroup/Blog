@@ -12,12 +12,12 @@ object ZobristHashCheckers {
 									Some(Piece(White, Pawn)), Some(Piece(White, Queen)))
 
 		val seq = for (m <- 1 to 50; piece <- allPieces) yield ((Pos.posAt(m).get, piece) -> rand.nextLong())
-		seq.toMap
+		Map(seq: _*)
 	}
 
 	final val zobrist2: Map[Color, Long] = {
 		val seq = for (side <- List(White, Black)) yield (side -> rand.nextLong())
-		seq.toMap
+		Map(seq: _*)
 	}
 
 	def computeHash(map: Map[Pos, Piece]): Long = {

@@ -1,5 +1,7 @@
 package checkers
 
+import CheckersTest._
+
 
 class MoveTest extends CheckersTest {
 

@@ -7,6 +7,8 @@ case class Board(pieces: Map[Pos, Piece], hash: Long) {
 
 	def apply(at: Pos): Option[Piece] = pieces get at
 
+	def contains(at: Pos): Boolean = pieces contains at
+
 	def place(piece: Piece, at: Pos): Option[Board] = {
 		if (pieces contains at) None
 		else Some(copy(pieces = pieces + ((at, piece)),
@@ -64,7 +66,7 @@ object Board {
 		val blackPart = for (m <- 1 to 20) yield (posAt(m).get, Piece(Black, Pawn))
 		val whitePart = for (m <- 31 to 50) yield (posAt(m).get, Piece(White, Pawn))
 
-		val map = (blackPart ++ whitePart).toMap
+		val map = Map((blackPart ++ whitePart).toSeq: _*)
 		Board(map, ZobristHashCheckers.computeHash(map))
 	}
 

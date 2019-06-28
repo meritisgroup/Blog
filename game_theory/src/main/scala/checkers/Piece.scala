@@ -120,7 +120,7 @@ case object DownAndLeft extends Direction {
 case object DownAndRight extends Direction {
 
 	def apply(at: Pos) = at.downRight
-	lazy val perpendiculars = List(DownAndRight, UpAndLeft, DownAndRight)
+	lazy val perpendiculars = List(DownAndRight, UpAndRight, DownAndLeft)
 	override val hashCode = 4
 
 }

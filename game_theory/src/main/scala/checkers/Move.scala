@@ -27,6 +27,8 @@ class Moves(val current: Board, val sideToPlay: Color) {
 	lazy val legalMoves: List[Move] = computeMoves
 	lazy val hash: Long = Moves.computeHash(current, sideToPlay)
 
+	val opponentSide = !sideToPlay
+
 	def computeStatus: Status = {
 		val countSideToPlay = current.pieces.foldLeft(0) { (acc, elt) => if (elt._2.color == sideToPlay) acc + 1 else acc }
 		val countOpponent = current.pieces.foldLeft(0) { (acc, elt) => if (elt._2.color != sideToPlay) acc + 1 else acc }
@@ -37,50 +39,56 @@ class Moves(val current: Board, val sideToPlay: Color) {
 		else Ongoing
 	}
 
-	def pawnMove(from: Pos, piece: Piece, dir: Direction): Option[Move] = {
-		for (to <- dir(from) if current(to).isEmpty; board <- current.move(from, to))
-			yield Move(piece, from, to, 0, board)
+	def pawnMove(from: Pos, piece: Piece, dir: Direction): Option[Move] = dir(from) match {
+		case Some(to) if !current.contains(to) =>
+			current.move(from, to) map { board => Move(piece, from, to, 0, board) }
+		case _ => None
 	}
 
 	@tailrec
-	final def queenMove(from: Pos, pos: Pos, piece: Piece, dir: Direction, list: List[Move] = Nil): List[Move] = {
-		val move = for (to <- dir(pos) if current(to).isEmpty; board <- current.move(from, to))
-			yield Move(piece, from, to, 0, board)
-
-		if (move.isEmpty) list
-		else queenMove(from, move.get.to, piece, dir, move.get :: list)
-	}
-
-	def pawnCapture(from: Pos, pos: Pos, piece: Piece, currentBoard: Board, currentCaptures: Int): List[Move] = {
-		def checkOpponent(dir: Direction): Option[Pos] = {
-			for (to <- dir(pos); opponent <- current(to) if opponent.is(!piece.color)) yield to
+	final def queenMove(from: Pos, pos: Pos, piece: Piece, dir: Direction, list: List[Move] = Nil): List[Move] =
+		dir(pos) match {
+			case Some(to) if !current.contains(to) => {
+				val move = current.move(from, to) map { board => Move(piece, from, to, 0, board) }
+				move match {
+					case Some(m) => queenMove(from, m.to, piece, dir, m :: list)
+					case _ => list
+				}
+			}
+			case _ => list
 		}
 
-		def checkEmpty(posOpponent: Pos, dir: Direction): Option[Pos] = {
-			for (last <- dir(posOpponent) if current(last).isEmpty) yield last
+	def pawnCapture(from: Pos, pos: Pos, piece: Piece, currentBoard: Board, currentCaptures: Int, dir: Direction): List[Move] = {
+		def checkEmpty(posOpponent: Pos): List[Move] = dir(posOpponent) match {
+			case Some(last) if !current.contains(last) => createMove(posOpponent, last)
+			case _ => Nil
 		}
 
-		val moves = Direction.all flatMap { dir =>
-			for (posOpponent <- checkOpponent(dir);
-					posEmpty <- checkEmpty(posOpponent, dir);
-					board <- currentBoard.take(pos, posEmpty, posOpponent))
-				yield Move(piece, from, posEmpty, currentCaptures + 1, board)
+		def createMove(posOpponent: Pos, posEmpty: Pos): List[Move] =
+			currentBoard.take(pos, posEmpty, posOpponent) match {
+				case Some(nextBoard) => {
+					val furtherMoves = dir.perpendiculars flatMap { d => pawnCapture(from, posEmpty, piece, nextBoard, currentCaptures + 1, d) }
+					if (!furtherMoves.isEmpty) furtherMoves
+					else List(Move(piece, from, posEmpty, currentCaptures + 1, nextBoard))
+				}
+				case _ => Nil
+			}
+
+		dir(pos) match {
+			case Some(to) if current.contains(to) && current(to).get.is(opponentSide) => checkEmpty(to)
+			case _ => Nil
 		}
-
-		val recMoves = moves flatMap { move => pawnCapture(from, move.to, piece, move.after, move.captureCount) }
-
-		moves ++ recMoves
 	}
 
 	def queenCapture(from: Pos, pos: Pos, piece: Piece, currentBoard: Board, currentCaptures: Int, allowedDirs: List[Direction]): List[Move] = {
 		@tailrec
-		def firstOpponent(p: Pos, dir: Direction): List[Pos] = dir(p) match {
+		def firstOpponent(p: Pos, dir: Direction): Option[Pos] = dir(p) match {
 			case Some(to) => {
 				if (current(to).isEmpty) firstOpponent(to, dir)
-				else if (current(to).get.is(!piece.color)) List(to)
-				else Nil
+				else if (current(to).get.is(!piece.color)) Some(to)
+				else None
 			}
-			case _ => Nil
+			case _ => None
 		}
 
 		@tailrec
@@ -96,12 +104,17 @@ class Moves(val current: Board, val sideToPlay: Color) {
 		}
 
 		allowedDirs flatMap { dir =>
-			val moves = { for (posOpponent <- firstOpponent(pos, dir);
-								posEmpty <- emptyPosAfter(posOpponent, dir))
-							yield buildMove(posOpponent, posEmpty)
-						}.flatten
-			val recMoves = moves flatMap { move => queenCapture(from, move.to, piece, move.after, move.captureCount, dir.perpendiculars) }
-			moves ++ recMoves
+			firstOpponent(pos, dir) match {
+				case Some(posOpponent) => {
+					val allEmptyPos = emptyPosAfter(posOpponent, dir)
+					val moves = ( allEmptyPos map { posEmpty => buildMove(posOpponent, posEmpty) } ).flatten
+					val furtherMoves = moves flatMap { move => queenCapture(from, move.to, piece, move.after, move.captureCount, dir.perpendiculars) }
+
+					if (!furtherMoves.isEmpty) furtherMoves
+					else moves
+				}
+				case _ => Nil
+			}
 		}
 	}
 
@@ -124,7 +137,7 @@ class Moves(val current: Board, val sideToPlay: Color) {
 	def computeMoves: List[Move] = {
 
 		def dispatchCapture(pos: Pos, piece: Piece): List[Move] = piece.role match {
-			case Pawn => promoteAll(pawnCapture(pos, pos, piece, current, 0))
+			case Pawn => promoteAll(Direction.all flatMap { dir => pawnCapture(pos, pos, piece, current, 0, dir) })
 			case Queen => queenCapture(pos, pos, piece, current, 0, Direction.all)
  		}
 

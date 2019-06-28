@@ -3,6 +3,7 @@ package checkers
 import algo.HyperParameters
 import algo.MinMax
 import algo.AlphaBeta
+import CheckersTest._
 
 
 // clean
@@ -182,7 +183,7 @@ class CheckersBrainTest extends CheckersTest {
 		logInfo(board, brainW, best, elapsedTime, usedMemory)
 
 		assert(!best._1.isEmpty)
-		assert(brainW.expandCount.get === 554224)
+		assert(brainW.expandCount.get === 553722)
 	}
 
 	test("game start - 2nd black move") {
@@ -199,7 +200,7 @@ class CheckersBrainTest extends CheckersTest {
 		logInfo(board, brainB, best, elapsedTime, usedMemory)
 
 		assert(!best._1.isEmpty)
-		assert(brainB.expandCount.get === 541684)
+		assert(brainB.expandCount.get === 541470)
 	}
 
 	// This test should be done with 10
@@ -219,6 +220,7 @@ class CheckersBrainTest extends CheckersTest {
 		logInfo(board, brain, best, elapsedTime, usedMemory)
 
 		assert(!best._1.isEmpty)
+		assert(brain.expandCount.get === 201536)
 	}
 
 }
