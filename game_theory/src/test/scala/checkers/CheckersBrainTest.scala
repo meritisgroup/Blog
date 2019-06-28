@@ -14,7 +14,7 @@ import CheckersTest._
 class CheckersBrainTest extends CheckersTest {
 
 	def brainMM(side: Color) = new CheckersBrain(side, MinMax.findBestNode, HyperParameters(6), true)
-	def brainAB(side: Color) = new CheckersBrain(side, AlphaBeta.findBestNode, HyperParameters(10), true)
+	def brainAB(side: Color) = new CheckersBrain(side, AlphaBeta.findBestNode, HyperParameters(8), true)
 
 	test("evaluation") {
 		assert(Evaluation.evaluate(new Moves(Board.init, White)) === 0, "Initial position should have 0 score")
@@ -151,7 +151,7 @@ class CheckersBrainTest extends CheckersTest {
 		}
 	}
 
-	def logInfo(board: Board, brain: CheckersBrain, best: (Option[Move], Double), elapsedTime: Long, usedMemory: Long) = {
+	def logInfo(board: Board, brain: CheckersBrain, best: (Option[Move], Double)) = {
 		val move = best._1
 		val score = best._2
 
@@ -162,62 +162,32 @@ class CheckersBrainTest extends CheckersTest {
 		val mb = 1024*1024
 
 		println("best move " + move.get.from.m + "x" + move.get.to.m)
-		println("computation time " + elapsedTime + " msec")
-		println("used memory " + (usedMemory / mb) + " Mb")
 		println("expanded " + brain.expandCount.get + " nodes with average branching factor of " + f"$bf%2.2f")
 		println("initial score " + (Evaluation.evaluate(new Moves(board, brain.side)) * 100) + " up to " + (best._2 * 100))
 		println(f"scores within values from $evalMin%2.2f to $evalMax%2.2f")
 	}
 
-	test("game start - 1st white move") {
+	test("game start") {
 		val brainW = brainAB(White)
 		val board = Board.init
 
-		System.gc()
-		val startMemory = Runtime.getRuntime.totalMemory
-		val startTime = System.currentTimeMillis()
 		val best = brainW.bestMove(board)
-		val elapsedTime = System.currentTimeMillis() - startTime
-		val usedMemory = Runtime.getRuntime.totalMemory - startMemory
 
-		logInfo(board, brainW, best, elapsedTime, usedMemory)
+		logInfo(board, brainW, best)
 
 		assert(!best._1.isEmpty)
-		assert(brainW.expandCount.get === 553722)
+		assert(brainW.expandCount.get === 65253)
 	}
 
-	test("game start - 2nd black move") {
-		val brainB = brainAB(Black)
-		val board = Board.init.move(Pos.posAt(35).get, Pos.posAt(30).get).get
-
-		System.gc()
-		val startMemory = Runtime.getRuntime.totalMemory
-		val startTime = System.currentTimeMillis()
-		val best = brainB.bestMove(board)
-		val elapsedTime = System.currentTimeMillis() - startTime
-		val usedMemory = Runtime.getRuntime.totalMemory - startMemory
-
-		logInfo(board, brainB, best, elapsedTime, usedMemory)
-
-		assert(!best._1.isEmpty)
-		assert(brainB.expandCount.get === 541470)
-	}
-
-	// This test should be done with 10
-	// With depth=10, it ends up with an out of memory
 	test("game middle") {
 		val board = buildBoard(Map(Piece(White, Pawn) -> List(46, 47, 48, 49, 50, 41, 45, 36, 38, 39, 40, 33, 34, 35, 28),
 									Piece(Black, Pawn) -> List(1, 2, 3, 4, 6, 7, 8, 9, 10, 11, 13, 14, 15, 20, 26)))
-		val brain = new CheckersBrain(Black, AlphaBeta.findBestNode, HyperParameters(8), true)
 
-		System.gc()
-		val startMemory = Runtime.getRuntime.totalMemory
-		val startTime = System.currentTimeMillis()
+		val brain = brainAB(Black)
+
 		val best = brain.bestMove(board)
-		val elapsedTime = System.currentTimeMillis() - startTime
-		val usedMemory = Runtime.getRuntime.totalMemory - startMemory
 
-		logInfo(board, brain, best, elapsedTime, usedMemory)
+		logInfo(board, brain, best)
 
 		assert(!best._1.isEmpty)
 		assert(brain.expandCount.get === 201536)

@@ -12,7 +12,7 @@ class MovePerfNonReg extends Bench.OnlineRegressionReport {
 								Piece(Black, Queen) -> List(20, 26)))
 
 	performance of "NON REG Checkers" in {
-		measure method "Moves & captures" in {
+		measure method "legalMoves" in {
 			using(Gen.unit("board")) in {
 				Unit => {
 					(0 to 10).foreach { i =>

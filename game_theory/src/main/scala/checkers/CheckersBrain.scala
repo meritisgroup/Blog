@@ -1,8 +1,6 @@
 package checkers
 
 import java.util.concurrent.atomic.AtomicInteger
-import scala.util.Random
-import collection.JavaConverters._
 import algo.HyperParameters
 import algo.TreeSearchAlgo._
 import algo.GameRules
@@ -15,7 +13,7 @@ class CheckersRules(log: Boolean) extends GameRules[Moves] {
 	val evaluationsSet = scala.collection.mutable.SortedSet[Double]()
 	val childrenCountAcc = new AtomicInteger(0)
 
-	val cache = new java.util.concurrent.ConcurrentHashMap[Long, Moves]().asScala
+	val cache = collection.mutable.LongMap[Moves]()
 
 	def createNode(board: Board, sideToPlay: Color): Moves = {
 		val hash = Moves.computeHash(board, sideToPlay)
@@ -24,11 +22,11 @@ class CheckersRules(log: Boolean) extends GameRules[Moves] {
 			cache(hash)
 		} else {
 			val node = new Moves(board, sideToPlay)
-			cache += (node.hash -> node)
+			cache += (hash -> node)
 
 			if (log) {
 				count.incrementAndGet
-				childrenCountAcc.addAndGet(node.legalMoves.size)
+				childrenCountAcc.addAndGet(node.nextBoards.size)
 			}
 
 			node
@@ -48,9 +46,9 @@ class CheckersRules(log: Boolean) extends GameRules[Moves] {
 			Nil
 		} else {
 			val otherSide = !node.sideToPlay
-			val moves = node.legalMoves
+			val nextBoards = node.nextBoards
 
-			moves map { move => createNode(move.after, otherSide) }
+			nextBoards map { board => createNode(board, otherSide) }
 		}
 	}
 
@@ -82,7 +80,7 @@ class CheckersBrain(val side: Color,
 	def bestMove(board: Board): (Option[Move], Double) = {
 		val initialNode = new Moves(board, side)
 
-		if (initialNode.legalMoves.size == 1) {
+		if (initialNode.nextBoards.size == 1) {
 			val uniqueMove = initialNode.legalMoves.head
 			(Some(uniqueMove), rules.evaluate(initialNode, true))
 

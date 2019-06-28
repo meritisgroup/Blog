@@ -24,8 +24,7 @@ case class Move(piece: Piece, from: Pos, to: Pos, captureCount: Int, after: Boar
 class Moves(val current: Board, val sideToPlay: Color) {
 
 	lazy val win: Status = computeStatus
-	lazy val legalMoves: List[Move] = computeMoves
-	lazy val hash: Long = Moves.computeHash(current, sideToPlay)
+	lazy val nextBoards: List[Board] = legalMoves map { move => move.after }
 
 	val opponentSide = !sideToPlay
 
@@ -35,7 +34,7 @@ class Moves(val current: Board, val sideToPlay: Color) {
 
 		if (countSideToPlay == 0) Lost
 		else if (countOpponent == 0) Won
-		else if (legalMoves.isEmpty) Lost
+		else if (nextBoards.isEmpty) Lost
 		else Ongoing
 	}
 
@@ -134,7 +133,7 @@ class Moves(val current: Board, val sideToPlay: Color) {
 
 	def promoteAll(moves: List[Move]): List[Move] = moves map promote
 
-	def computeMoves: List[Move] = {
+	def legalMoves: List[Move] = {
 
 		def dispatchCapture(pos: Pos, piece: Piece): List[Move] = piece.role match {
 			case Pawn => promoteAll(Direction.all flatMap { dir => pawnCapture(pos, pos, piece, current, 0, dir) })
