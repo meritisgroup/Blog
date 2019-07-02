@@ -9,7 +9,7 @@ object TicTacToeBrain {
 
 	val corners = List(0, 2, 8, 6)
 
-	def aboutToWin(side: Mark, grid: Grid): Option[Location] = {
+	def aboutToWin(grid: Grid, side: Mark): Option[Location] = {
 		def test(set: Set[Location]): Option[Location] = {
 			val grouped = set.groupBy(i => grid(i)).withDefaultValue(List())
 			if (grouped(side).size == 2 && grouped(Empty).size == 1) {
@@ -23,7 +23,7 @@ object TicTacToeBrain {
 		else Some(result.head)
 	}
 
-	def bestMove(side: Mark, grid: Grid): Grid = {
+	def bestMove(grid: Grid, side: Mark): Grid = {
 		val marksCount = grid.filter(m => m != Empty).size
 		val opposite = if (side == Cross) Circle else Cross
 
@@ -49,13 +49,13 @@ object TicTacToeBrain {
 
 		} else {
 			// If computer is about to win, end up the game !
-			val win = aboutToWin(side, grid)
+			val win = aboutToWin(grid, side)
 			if (!win.isEmpty) {
 				grid.updated(win.get, side)
 			} else {
 
 				// If the player is about to win, block him !
-				val winOpposite = aboutToWin(opposite, grid)
+				val winOpposite = aboutToWin(grid, opposite)
 				if (!winOpposite.isEmpty) {
 					grid.updated(winOpposite.get, side)
 				} else {

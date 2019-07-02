@@ -6,6 +6,7 @@ import tictactoe.TicTacToe
 import tictactoe.TicTacToe._
 import tictactoe.PlayTicTacToe._
 import TreeSearchAlgo._
+import Tournament._
 
 
 case class Node(eval: Double, children: List[Node] = Nil)
@@ -47,34 +48,19 @@ object TicTacToeAutoPlayer {
 
 	val hyper = HyperParameters(20)
 
-	type Player = (Mark, Grid) => Grid
-
-	def minMaxPlayer(side: Mark, grid: Grid): Grid = {
+	def minMaxPlayer(grid: Grid, side: Mark): Grid = {
 		val rules = new TicTacToeRules(side)
 		val searchResult = MinMax.findBestNode[Grid](grid, rules, hyper)
 		searchResult.bestChilds.head
 	}
 
-	def alphaBetaPlayer(side: Mark, grid: Grid): Grid = {
+	def alphaBetaPlayer(grid: Grid, side: Mark): Grid = {
 		val rules = new TicTacToeRules(side)
 		val searchResult = AlphaBeta.findBestNode[Grid](grid, rules, hyper)
 		searchResult.bestChilds.head
 	}
 
-	def play(side: Mark, grid: Grid, player1: Player, player2: Player, list: List[Grid] = Nil): (Mark, List[Grid]) = {
-		val nextGrid = player1(side, grid)
-
-		if (win(nextGrid, side)) {
-			(side, nextGrid :: list)
-		} else if (nextGrid.filter(_ == Empty).size == 0) {
-			(Empty, nextGrid :: list)
-		} else {
-			play(opponent(side), nextGrid, player2, player1, nextGrid :: list)
-		}
+	def play(side: Mark, grid: Grid, player1: Player[Grid, Mark], player2: Player[Grid, Mark]): (Option[Mark], List[Grid]) = {
+		Tournament.play(grid, side, opponent(side), player1, player2, TicTacToe.win, TicTacToe.draw)
 	}
-}
-
-
-abstract class TreeSearchAlgoTest extends FunSuite {
-
 }

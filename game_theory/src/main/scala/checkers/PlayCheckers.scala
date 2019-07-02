@@ -77,7 +77,7 @@ object PlayCheckers extends App {
 	}
 
 	def letComputerPlay(board: Board): Option[Move] = {
-		val result = new CheckersBrain(computerSide, AlphaBeta.findBestNode, HyperParameters(10)).bestMove(board)
+		val result = new CheckersBrain(AlphaBeta.findBestNode, HyperParameters(10)).bestMove(board, computerSide)
 		result._1
 	}
 

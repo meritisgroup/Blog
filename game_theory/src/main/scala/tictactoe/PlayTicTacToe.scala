@@ -54,7 +54,7 @@ object PlayTicTacToe extends App {
 	}
 
 	def letComputerPlay(grid: Grid): Grid = {
-		TicTacToeBrain.bestMove(computerSide, grid)
+		TicTacToeBrain.bestMove(grid, computerSide)
 	}
 
 	def playRound(grid: Grid): Mark = {

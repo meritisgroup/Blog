@@ -37,4 +37,8 @@ object TicTacToe {
 		else winningCombinations.exists(l => l.subsetOf(set))
 	}
 	
+	def draw(grid: Grid, side: Mark): Boolean = {
+		grid.filter(_ == Empty).size == 0
+	}
+
 }

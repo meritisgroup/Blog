@@ -1,12 +1,13 @@
 package algo
 
+import org.scalatest.FunSuite
 import tictactoe.TicTacToe._
 import tictactoe.PlayTicTacToe._
 import tictactoe._
 import algo.TreeSearchAlgo._
 
 
-class MinMaxTest extends TreeSearchAlgoTest {
+class MinMaxTest extends FunSuite {
 
 
 //

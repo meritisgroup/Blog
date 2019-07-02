@@ -13,8 +13,8 @@ import CheckersTest._
 
 class CheckersBrainTest extends CheckersTest {
 
-	def brainMM(side: Color) = new CheckersBrain(side, MinMax.findBestNode, HyperParameters(6), true)
-	def brainAB(side: Color) = new CheckersBrain(side, AlphaBeta.findBestNode, HyperParameters(8), true)
+	def brainMM = new CheckersBrain(MinMax.findBestNode, HyperParameters(6), true)
+	def brainAB = new CheckersBrain(AlphaBeta.findBestNode, HyperParameters(8), true)
 
 	test("evaluation") {
 		assert(Evaluation.evaluate(new Moves(Board.init, White)) === 0, "Initial position should have 0 score")
@@ -41,21 +41,21 @@ class CheckersBrainTest extends CheckersTest {
 	test("simple strategy : white won") {
 		val board = buildBoard(Map(Piece(White, Pawn) -> List(22, 34, 35),
 									Piece(Black, Pawn) -> List(18, 25)))
-		val best = brainMM(White).bestMove(board)
+		val best = brainMM.bestMove(board, White)
 
 		assert(!best._1.isEmpty)
 		val move = best._1.get
 		assert(move.piece === Piece(White, Pawn))
 		assert((move.from.m, move.to.m, move.captureCount) === (22, 13, 1))
 
-		val best2 = brainAB(White).bestMove(board)
+		val best2 = brainAB.bestMove(board, White)
 
 		assert(!best2._1.isEmpty)
 		val move2 = best2._1.get
 		assert(move2.piece === Piece(White, Pawn))
 		assert((move2.from.m, move2.to.m, move2.captureCount) === (22, 13, 1))
 
-		val result = autoPlay(White, board, brainAB(White), brainAB(Black), false)
+		val result = CheckersAutoPlayer.play(White, board, brainAB, brainAB)
 		val winner = result._1
 		assert(winner === Some(White))
 	}
@@ -64,21 +64,21 @@ class CheckersBrainTest extends CheckersTest {
 		val board = buildBoard(Map(Piece(White, Pawn) -> List(31, 34),
 									Piece(Black, Queen) -> List(9),
 									Piece(Black, Pawn) -> List(24)))
-		val best = brainMM(Black).bestMove(board)
+		val best = brainMM.bestMove(board, Black)
 
 		assert(!best._1.isEmpty)
 		val move = best._1.get
 		assert(move.piece === Piece(Black, Queen))
 		assert((move.from.m, move.to.m, move.captureCount) === (9, 36, 1))
 
-		val best2 = brainAB(Black).bestMove(board)
+		val best2 = brainAB.bestMove(board, Black)
 
 		assert(!best2._1.isEmpty)
 		val move2 = best2._1.get
 		assert(move2.piece === Piece(Black, Queen))
 		assert((move2.from.m, move2.to.m, move2.captureCount) === (9, 36, 1))
 
-		val result = autoPlay(Black, board, brainAB(Black), brainAB(White), false)
+		val result = CheckersAutoPlayer.play(Black, board, brainAB, brainAB)
 		val winner = result._1
 		assert(winner === Some(Black))
 	}
@@ -91,7 +91,7 @@ class CheckersBrainTest extends CheckersTest {
 
 	test("complicated strategy : 4 first moves") {
 		new ComplicatedStrategyBoard {
-			val best = brainAB(White).bestMove(board)
+			val best = brainAB.bestMove(board, White)
 
 			assert(!best._1.isEmpty)
 			val move = best._1.get
@@ -99,14 +99,14 @@ class CheckersBrainTest extends CheckersTest {
 				"1st move is not the best one : " + move)
 			assert(best._2 > Evaluation.evaluate(new Moves(board, White)) * 100)
 
-			val best2 = brainAB(Black).bestMove(move.after)
+			val best2 = brainAB.bestMove(move.after, Black)
 
 			assert(!best2._1.isEmpty)
 			val move2 = best2._1.get
 			assert((move2.from.m, move2.to.m, move2.captureCount) === (17, 37, 2),
 				"2nd move is not the best one : " + move2)
 
-			val best3 = brainAB(White).bestMove(move2.after)
+			val best3 = brainAB.bestMove(move2.after, White)
 
 			assert(!best3._1.isEmpty)
 			val move3 = best3._1.get
@@ -114,7 +114,7 @@ class CheckersBrainTest extends CheckersTest {
 				"3rd move is not the best one : " + move3)
 			assert(best3._2 > Evaluation.evaluate(new Moves(move2.after, White)) * 100)
 
-			val best4 = brainAB(Black).bestMove(move3.after)
+			val best4 = brainAB.bestMove(move3.after, Black)
 
 			assert(!best4._1.isEmpty)
 			val move4 = best4._1.get
@@ -123,35 +123,7 @@ class CheckersBrainTest extends CheckersTest {
 		}
 	}
 
-	def checkMoves(moves: List[Move], refs: List[(Int, Int, Int)]) = {
-		for (i <- 0 until refs.size) {
-			assert(moves.size > i, "missing move at step " + (i+1))
-			assert((moves(i).from.m, moves(i).to.m, moves(i).captureCount) === (refs(i)._1, refs(i)._2, refs(i)._3),
-				"Move at step " + (i+1) + " is not the best one")
-		}
-		assert(moves.size === refs.size)
-	}
-
-	test("complicated strategy : all moves until the end") {
-		new ComplicatedStrategyBoard {
-			val player1 = brainAB(White)
-			val player2 = brainAB(Black)
-
-			val result = autoPlay(White, board, player1, player2, false)
-			val winner = result._1
-			val moves = result._2
-
-			checkMoves(moves, List((26, 21, 0), (17, 37, 2),
-									(28, 6, 2), (37, 39, 2),
-									(6, 1, 0), (24, 42, 2),
-									(6, 43, 4), (35, 44, 0)))
-
-			assert(winner.isDefined)
-			assert(winner.get === White)
-		}
-	}
-
-	def logInfo(board: Board, brain: CheckersBrain, best: (Option[Move], Double)) = {
+	def logInfo(board: Board, side: Color, brain: CheckersBrain, best: (Option[Move], Double)) = {
 		val move = best._1
 		val score = best._2
 
@@ -163,31 +135,30 @@ class CheckersBrainTest extends CheckersTest {
 
 		println("best move " + move.get.from.m + "x" + move.get.to.m)
 		println("expanded " + brain.expandCount.get + " nodes with average branching factor of " + f"$bf%2.2f")
-		println("initial score " + (Evaluation.evaluate(new Moves(board, brain.side)) * 100) + " up to " + (best._2 * 100))
+		println("initial score " + (Evaluation.evaluate(new Moves(board, side)) * 100) + " up to " + (best._2 * 100))
 		println(f"scores within values from $evalMin%2.2f to $evalMax%2.2f")
 	}
 
 	test("game start") {
-		val brainW = brainAB(White)
+		val brainW = brainAB
 		val board = Board.init
 
-		val best = brainW.bestMove(board)
+		val best = brainW.bestMove(board, White)
 
-		logInfo(board, brainW, best)
+		logInfo(board, White, brainW, best)
 
 		assert(!best._1.isEmpty)
 		assert(brainW.expandCount.get === 65253)
 	}
 
 	test("game middle") {
+		val brain = brainAB
 		val board = buildBoard(Map(Piece(White, Pawn) -> List(46, 47, 48, 49, 50, 41, 45, 36, 38, 39, 40, 33, 34, 35, 28),
 									Piece(Black, Pawn) -> List(1, 2, 3, 4, 6, 7, 8, 9, 10, 11, 13, 14, 15, 20, 26)))
 
-		val brain = brainAB(Black)
+		val best = brain.bestMove(board, Black)
 
-		val best = brain.bestMove(board)
-
-		logInfo(board, brain, best)
+		logInfo(board, Black, brain, best)
 
 		assert(!best._1.isEmpty)
 		assert(brain.expandCount.get === 201536)

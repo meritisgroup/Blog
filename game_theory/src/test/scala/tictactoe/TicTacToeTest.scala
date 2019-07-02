@@ -60,20 +60,20 @@ class TicTacToeTest extends FunSuite {
 	}
 
 	test("brain 1st move") {
-		val grid = TicTacToeBrain.bestMove(Circle, initialGrid)
+		val grid = TicTacToeBrain.bestMove(initialGrid, Circle)
 		assert(grid(4) === Circle)
 	}
 
 	test("brain 2nd move") {
 		new Level2 {
-			val grid2 = TicTacToeBrain.bestMove(Circle, grid)
+			val grid2 = TicTacToeBrain.bestMove(grid, Circle)
 			assert(grid2(0) === Circle)
 		}
 	}
 
 	test("brain : computer is about to win") {
 		new Level1 {
-			val grid2 = TicTacToeBrain.bestMove(Circle, grid)
+			val grid2 = TicTacToeBrain.bestMove(grid, Circle)
 			assert(grid2(7) === Circle)
 			assert(win(grid2, Circle))
 		}
@@ -81,7 +81,7 @@ class TicTacToeTest extends FunSuite {
 
 	test("brain : player is about to win") {
 		new Level3 {
-			val grid2 = TicTacToeBrain.bestMove(Cross, grid)
+			val grid2 = TicTacToeBrain.bestMove(grid, Cross)
 			assert(grid2(5) === Cross)
 		}
 	}

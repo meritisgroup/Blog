@@ -2,13 +2,14 @@ package algo
 
 import java.util.concurrent.atomic.AtomicInteger
 import scala.util.Random
+import org.scalatest.FunSuite
 import tictactoe.TicTacToe
 import tictactoe.TicTacToe._
 import tictactoe.PlayTicTacToe._
 import algo.TreeSearchAlgo._
 
 
-class AlphaBetaTest extends TreeSearchAlgoTest {
+class AlphaBetaTest extends FunSuite {
 
 	val abHyper = HyperParameters(10)
 

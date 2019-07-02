@@ -55,8 +55,7 @@ class CheckersRules(log: Boolean) extends GameRules[Moves] {
 }
 
 
-class CheckersBrain(val side: Color,
-					searchFct: BestNodeFct[Moves] = AlphaBeta.findBestNode[Moves],
+class CheckersBrain(searchFct: BestNodeFct[Moves] = AlphaBeta.findBestNode[Moves],
 					hyper: HyperParameters = HyperParameters(10),
 					log: Boolean = false) {
 
@@ -77,7 +76,7 @@ class CheckersBrain(val side: Color,
 		else Some(rules.childrenCountAcc.get.toDouble / rules.count.get)
 	}
 
-	def bestMove(board: Board): (Option[Move], Double) = {
+	def bestMove(board: Board, side: Color): (Option[Move], Double) = {
 		val initialNode = new Moves(board, side)
 
 		if (initialNode.nextBoards.size == 1) {
