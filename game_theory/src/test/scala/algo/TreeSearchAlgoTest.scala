@@ -2,6 +2,7 @@ package algo
 
 import java.util.concurrent.atomic.AtomicInteger
 import org.scalatest.FunSuite
+import scala.util.Random
 import tictactoe.TicTacToe
 import tictactoe.TicTacToe._
 import tictactoe.PlayTicTacToe._
@@ -47,6 +48,11 @@ class TicTacToeRules(side: Mark) extends GameRules[Grid] {
 object TicTacToeAutoPlayer {
 
 	val hyper = HyperParameters(20)
+
+	def randomPlayer(grid: Grid, side: Mark): Grid = {
+		val moves = legalMoves(grid, side).map(_._1)
+		moves(Random.nextInt(moves.size))
+	}
 
 	def minMaxPlayer(grid: Grid, side: Mark): Grid = {
 		val rules = new TicTacToeRules(side)

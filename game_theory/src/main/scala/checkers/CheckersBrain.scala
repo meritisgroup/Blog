@@ -7,12 +7,13 @@ import algo.GameRules
 import algo.AlphaBeta
 
 
-class CheckersRules(log: Boolean) extends GameRules[Moves] {
+class CheckersRules(log: Boolean, evalParams: EvalParameters) extends GameRules[Moves] {
 
 	val count = new AtomicInteger(0)
 	val evaluationsSet = scala.collection.mutable.SortedSet[Double]()
 	val childrenCountAcc = new AtomicInteger(0)
 
+	val eval = new Evaluation(evalParams)
 	val cache = collection.mutable.LongMap[Moves]()
 
 	def createNode(board: Board, sideToPlay: Color): Moves = {
@@ -34,7 +35,7 @@ class CheckersRules(log: Boolean) extends GameRules[Moves] {
 	}
 
 	override def evaluate(node: Moves, maximize: Boolean): Double = {
-		val result = Evaluation.evaluate(node)
+		val result = eval.evaluate(node)
 		if (log) {
 			evaluationsSet += result
 		}
@@ -57,9 +58,10 @@ class CheckersRules(log: Boolean) extends GameRules[Moves] {
 
 class CheckersBrain(searchFct: BestNodeFct[Moves] = AlphaBeta.findBestNode[Moves],
 					hyper: HyperParameters = HyperParameters(10),
+					val evalParams: EvalParameters = EvalParameters(1.5, 4.0),
 					log: Boolean = false) {
 
-	val rules = new CheckersRules(log)
+	val rules = new CheckersRules(log, evalParams)
 
 	def expandCount: Option[Int] = {
 		if (!log) None

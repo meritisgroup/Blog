@@ -1,11 +1,12 @@
 package checkers
 
 
-object Evaluation {
+case class EvalParameters(pawnSideWeight: Double, queenValue: Double)
+
+
+class Evaluation(params: EvalParameters) {
 	
 	val pawnValue = 1.0
-	val queenValue = 4.0
-	val pawnSideWeight = 1.5
 
 	def evaluate(moves: Moves): Double = {
 		def pawnWeight(pos: Pos): Double = {
@@ -13,13 +14,13 @@ object Evaluation {
 					|| pos.m <= 10
 					|| pos.m == 16 || pos.m == 26 || pos.m == 36
 					|| pos.m == 15 || pos.m == 25 || pos.m == 35) {
-				pawnSideWeight
+				params.pawnSideWeight
 			} else 1.0
 		}
 
 		def evaluateEach(pos: Pos, piece: Piece): Double = piece.role match {
 			case Pawn => pawnValue * pawnWeight(pos)
-			case Queen => queenValue
+			case Queen => params.queenValue
 		}
 
 		if (moves.win == Won) {
