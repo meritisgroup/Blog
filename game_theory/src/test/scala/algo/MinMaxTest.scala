@@ -119,13 +119,13 @@ class MinMaxTest extends FunSuite {
 	test("test with tic tac toe : brain vs min max") {
 		// Do it 10 times to make sure there is no random result
 		for (i <- 0 to 10) {
-			val result = TicTacToeAutoPlayer.play(Circle, initialGrid, TicTacToeAutoPlayer.minMaxPlayer, TicTacToeBrain.bestMove)
+			val result = TicTacToeAutoPlayer.play(Circle, initialGrid, TicTacToeAutoPlayer.minMaxPlayer, TicTacToeAutoPlayer.bestMovePlayer)
 			if (result._1 == Cross) {
 				result._2.reverse.foreach { grid => println(gridToString(grid)) }
 				fail("MinMax was defeated by the brain when playing 1st")
 			}
 
-			val result2 = TicTacToeAutoPlayer.play(Circle, initialGrid, TicTacToeBrain.bestMove, TicTacToeAutoPlayer.minMaxPlayer)
+			val result2 = TicTacToeAutoPlayer.play(Circle, initialGrid, TicTacToeAutoPlayer.bestMovePlayer, TicTacToeAutoPlayer.minMaxPlayer)
 			if (result2._1 == Circle) {
 				result2._2.reverse.foreach { grid => println(gridToString(grid)) }
 				fail("MinMax was defeated by the brain when playing 2nd")

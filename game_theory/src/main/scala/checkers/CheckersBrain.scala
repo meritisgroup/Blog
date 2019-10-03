@@ -58,7 +58,7 @@ class CheckersRules(log: Boolean, evalParams: EvalParameters) extends GameRules[
 
 class CheckersBrain(searchFct: BestNodeFct[Moves] = AlphaBeta.findBestNode[Moves],
 					hyper: HyperParameters = HyperParameters(10),
-					val evalParams: EvalParameters = EvalParameters(1.5, 4.0),
+					val evalParams: EvalParameters = EvalParameters(1.1, 10.0),
 					log: Boolean = false) {
 
 	val rules = new CheckersRules(log, evalParams)

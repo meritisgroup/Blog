@@ -6,6 +6,7 @@ import scala.util.Random
 import tictactoe.TicTacToe
 import tictactoe.TicTacToe._
 import tictactoe.PlayTicTacToe._
+import tictactoe._
 import TreeSearchAlgo._
 import Tournament._
 
@@ -49,21 +50,34 @@ object TicTacToeAutoPlayer {
 
 	val hyper = HyperParameters(20)
 
-	def randomPlayer(grid: Grid, side: Mark): Grid = {
-		val moves = legalMoves(grid, side).map(_._1)
-		moves(Random.nextInt(moves.size))
+	def bestMovePlayer: Player[Grid, Mark] = {
+		Player(TicTacToeBrain.bestMove, "TTT best move player")
 	}
 
-	def minMaxPlayer(grid: Grid, side: Mark): Grid = {
-		val rules = new TicTacToeRules(side)
-		val searchResult = MinMax.findBestNode[Grid](grid, rules, hyper)
-		searchResult.bestChilds.head
+	def randomPlayer: Player[Grid, Mark] = {
+		def play(grid: Grid, side: Mark): Grid = {
+			val moves = legalMoves(grid, side).map(_._1)
+			moves(Random.nextInt(moves.size))
+		}
+		Player(play, "TTT random player")
 	}
 
-	def alphaBetaPlayer(grid: Grid, side: Mark): Grid = {
-		val rules = new TicTacToeRules(side)
-		val searchResult = AlphaBeta.findBestNode[Grid](grid, rules, hyper)
-		searchResult.bestChilds.head
+	def minMaxPlayer: Player[Grid, Mark] = {
+		def play(grid: Grid, side: Mark): Grid = {
+			val rules = new TicTacToeRules(side)
+			val searchResult = MinMax.findBestNode[Grid](grid, rules, hyper)
+			searchResult.bestChilds.head
+		}
+		Player(play, "TTT min-max player")
+	}
+
+	def alphaBetaPlayer: Player[Grid, Mark] = {
+		def play(grid: Grid, side: Mark): Grid = {
+			val rules = new TicTacToeRules(side)
+			val searchResult = AlphaBeta.findBestNode[Grid](grid, rules, hyper)
+			searchResult.bestChilds.head
+		}
+		Player(play, "TTT alpha-beta player")
 	}
 
 	def play(side: Mark, grid: Grid, player1: Player[Grid, Mark], player2: Player[Grid, Mark]): (Option[Mark], List[Grid]) = {

@@ -3,6 +3,7 @@ package checkers
 import algo.HyperParameters
 import algo.MinMax
 import algo.AlphaBeta
+import algo.Tournament
 import CheckersTest._
 
 
@@ -168,6 +169,17 @@ class CheckersBrainTest extends CheckersTest {
 
 		assert(!best._1.isEmpty)
 		assert(brain.expandCount.get === 201536)
+	}
+
+	test("complete game") {
+		val weakestPlayer = CheckersTournament.buildPlayer(2, 1.0, 2.0)
+		val strongestPlayer = CheckersTournament.buildPlayer(6, 1.1, 10.0)
+
+		val result = Tournament.play(Board.init, White, Black,
+										weakestPlayer, strongestPlayer,
+										CheckersAutoPlayer.win, CheckersAutoPlayer.draw, 200)
+
+		assert(result._1 === Some(Black))
 	}
 
 }

@@ -30,13 +30,13 @@ object PlayCheckers extends App {
 			case _ => ' '
 		}
 
-		val refLetters = "    a b c d e f g h i j"
+		val refLetters = "    a  b  c  d  e  f  g  h  i  j"
 
 		val lines = for (row <- 0 to 9) yield {
 			val rowText = 10 - row
 			val chars = (0 to 9).map { col => mToChar(Pos.manoury(row, col)) }
 
-			f"$rowText%2.0f" + "  " + chars.mkString(" ") + "  " + f"$rowText%2.0f"
+			f"$rowText%2.0f" + "  " + chars.mkString("  ") + "  " + f"$rowText%2.0f"
 		}
 
 		val list = List(refLetters) ++ lines ++ List(refLetters)
