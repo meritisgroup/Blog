@@ -6,11 +6,29 @@ import Pos._
 
 class ActorTest extends FunSuite {
 	
+	test("data referential") {
+		assert(White.white)
+		assert(Black.black)
+
+		Pos.all.foreach { pos =>
+			assert(pos != null)
+			assert(pos.down != null)
+			assert(pos.up != null)
+			assert(pos.left != null)
+			assert(pos.right != null)
+			assert(pos.downLeft != null)
+			assert(pos.downRight != null)
+			assert(pos.upLeft != null)
+			assert(pos.upRight != null)
+		}
+
+		assert(Piece(White, Queen).hashCode != Piece(Black, Pawn).hashCode)
+	}
+
 	def checkMove(role: Role, init: Pos, refs: Set[Pos]) {
-		val piece = Piece(Color.White, role)
+		val piece = Piece(White, role)
 		val board = Board.empty.place(piece, init).get
-		val actor = Actor(piece, init, board)
-		val set = actor.moves.map(_.dest).toSet
+		val set = new Moves(board, White).legalMoves.map(_.dest).toSet
 
 		assert(set === refs)
 	}

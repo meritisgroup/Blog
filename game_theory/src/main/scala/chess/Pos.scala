@@ -1,7 +1,6 @@
 package chess
 
 import scala.math.abs
-import chess._
 
 
 sealed case class Pos private (x: Int, y: Int) {
@@ -19,8 +18,6 @@ sealed case class Pos private (x: Int, y: Int) {
 
 	def onSameDiagonal(other: Pos): Boolean = abs(x - other.x) == abs(y - other.y)
 	def onSameLine(other: Pos): Boolean = (y == other.y) || (x == other.x)
-
-	val color = Color((x % 2 == 0) ^ (y % 2 == 0))
 
 	override val hashCode = 8 * (y - 1) + (x - 1)
 

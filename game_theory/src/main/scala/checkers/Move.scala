@@ -10,11 +10,11 @@ case object Won extends Status {
 }
 
 case object Lost extends Status {
-	override val hashCode = 1
+	override val hashCode = 2
 }
 
 case object Ongoing extends Status {
-	override val hashCode = 1
+	override val hashCode = 3
 }
 
 

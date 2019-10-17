@@ -46,9 +46,9 @@ case class Actor(piece: Piece, pos: Pos, board: Board) {
 	}
 
 	def pawnMoves: List[Move] = {
-		val firstLine = if (piece.is(Color.White)) 2 else 7
-		val movingDir: Direction = if (piece.is(Color.White)) (_.up) else (_.down)
-		val takingDirs: Directions = if (piece.is(Color.White)) List(_.upLeft, _.upRight)
+		val firstLine = if (piece.is(White)) 2 else 7
+		val movingDir: Direction = if (piece.is(White)) (_.up) else (_.down)
+		val takingDirs: Directions = if (piece.is(White)) List(_.upLeft, _.upRight)
 										else List(_.downLeft, _.downRight)
 
 		def moveBy2(from: Pos): Option[Move] = movingDir(from) match {

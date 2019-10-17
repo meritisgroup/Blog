@@ -1,33 +1,78 @@
 package chess
 
-import chess._
 import Pos.posAt
 
 
-case class Board(pieces: Map[Pos, Piece]) {
+case class Board(pieces: Map[Pos, Piece], hash: Long) {
 
 	def apply(at: Pos): Option[Piece] = pieces get at
 
 	def apply(x: Int, y: Int): Option[Piece] = posAt(x, y) flatMap pieces.get
 
+	def contains(at: Pos): Boolean = pieces contains at
+
 	def place(piece: Piece, at: Pos): Option[Board] = {
 		if (pieces contains at) None
-		else Some(copy(pieces = pieces + ((at, piece))))
+		else Some(copy(pieces = pieces + ((at, piece)),
+						hash = updateHash(hash, at, Some(piece))))
 	}
 
-	def remove(at: Pos): Option[Board] = pieces get at map { piece => copy(pieces = pieces - at) }
+	def replace(piece: Piece, at: Pos): Option[Board] = {
+		if (!(pieces contains at)) None
+		else Some(copy(pieces = pieces + ((at, piece)),
+						hash = updateHash(hash, at, Some(piece))))
+	}
+
+	def remove(at: Pos): Option[Board] = {
+		pieces get at map { piece =>
+			copy(pieces = pieces - at,
+					hash = updateHash(hash, at, None))
+		}
+	}
 
 	def move(orig: Pos, dest: Pos): Option[Board] = {
 		if (pieces contains dest) None
-		else pieces get orig map { piece => copy(pieces = pieces - orig + ((dest, piece))) }
+		else pieces get orig map { piece =>
+			copy(pieces = pieces - orig + ((dest, piece)),
+					hash = { 
+						val hash1 = updateHash(hash, orig, None)
+						updateHash(hash1, dest, Some(piece))
+					} )
+		}
 	}
 
 	def take(orig: Pos, dest: Pos): Option[Board] = {
-		if (pieces contains dest) pieces get orig map { piece => copy(pieces = pieces - orig + ((dest, piece))) }
-		else None
+		if ((pieces contains dest) && (pieces contains orig)) {
+			pieces get orig map { piece =>
+				copy(pieces = pieces - orig + ((dest, piece)),
+						hash = {
+							val hash1 = updateHash(hash, orig, None)
+							updateHash(hash1, dest, Some(piece))
+						} )
+			}
+
+		} else None
 	}
 
-	def evaluate(refColor: Color): Double = {
+	def take(orig: Pos, dest: Pos, taken: Pos): Option[Board] = {
+		if ((pieces contains taken) && !(pieces contains dest) && (pieces contains orig)) {
+			pieces get orig map { piece =>
+				copy(pieces = pieces - orig - taken + ((dest, piece)),
+						hash = {
+							val hash1 = updateHash(hash, orig, None)
+							val hash2 = updateHash(hash1, taken, None)
+							updateHash(hash2, dest, Some(piece))
+						} )
+			}
+
+		} else None
+	}
+
+	def updateHash(acc: Long, pos: Pos, piece: Option[Piece]): Long = {
+		ZobristHashChess.replace(acc, pos, pieces.get(pos), piece)
+	}
+
+	/*def evaluate(refColor: Color): Double = {
 		def evaluateEach(pos: Pos, piece: Piece): Double = piece.role match {
 			case Pawn => 1
 			case Rook => 5
@@ -42,14 +87,8 @@ case class Board(pieces: Map[Pos, Piece]) {
 			if (eltColor == refColor) acc + evaluateEach(elt._1, elt._2)
 			else acc - evaluateEach(elt._1, elt._2)
 		})
-	}
+	}*/
 
-
-	def check(refColor: Color): Boolean = false
-
-	def mat(refColor: Color): Boolean = false
-
-	def pat(refColor: Color): Boolean = false
 
 }
 
@@ -60,15 +99,19 @@ object Board {
 
 		val items = for (y <- Seq(1, 2, 7, 8); x <- 1 to 8)
 					yield (posAt(x, y) map { pos => y match {
-						case 1 => (pos, Piece(Color.White, backRank(x-1)))
-						case 2 => (pos, Piece(Color.White, Pawn))
-						case 7 => (pos, Piece(Color.Black, Pawn))
-						case 8 => (pos, Piece(Color.Black, backRank(x-1)))
+						case 1 => (pos, Piece(White, backRank(x-1)))
+						case 2 => (pos, Piece(White, Pawn))
+						case 7 => (pos, Piece(Black, Pawn))
+						case 8 => (pos, Piece(Black, backRank(x-1)))
 					}})
 
-		Board(items.flatten.toMap)
+		val map = items.flatten.toMap
+		Board(map, ZobristHashChess.computeHash(map))
 	}
 
-	def empty: Board = Board(Map.empty[Pos, Piece])
+	def empty: Board = {
+		val map = Map.empty[Pos, Piece]
+		Board(map, ZobristHashChess.computeHash(map))
+	}
 
 }
