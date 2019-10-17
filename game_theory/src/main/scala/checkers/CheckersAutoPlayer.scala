@@ -1,17 +1,17 @@
 package checkers
 
 import algo.Tournament
-import algo.Player
+import algo.Tournament.Player
 
 
 object CheckersAutoPlayer {
 
-	def brainToPlayer(brain: CheckersBrain, desc: String = "Checkers player"): Player[Board, Color] = {
+	def brainToPlayer(brain: CheckersBrain): Player[Board, Color] = {
 		def fct(board: Board, side: Color): Board = {
 			brain.bestMove(board, side)._1.get.after
 		}
 
-		Player[Board, Color](fct, desc)
+		fct
 	}
 
 	def win(board: Board, side: Color): Boolean = {

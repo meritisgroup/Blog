@@ -51,7 +51,7 @@ object TicTacToeAutoPlayer {
 	val hyper = HyperParameters(20)
 
 	def bestMovePlayer: Player[Grid, Mark] = {
-		Player(TicTacToeBrain.bestMove, "TTT best move player")
+		TicTacToeBrain.bestMove
 	}
 
 	def randomPlayer: Player[Grid, Mark] = {
@@ -59,7 +59,7 @@ object TicTacToeAutoPlayer {
 			val moves = legalMoves(grid, side).map(_._1)
 			moves(Random.nextInt(moves.size))
 		}
-		Player(play, "TTT random player")
+		play
 	}
 
 	def minMaxPlayer: Player[Grid, Mark] = {
@@ -68,7 +68,7 @@ object TicTacToeAutoPlayer {
 			val searchResult = MinMax.findBestNode[Grid](grid, rules, hyper)
 			searchResult.bestChilds.head
 		}
-		Player(play, "TTT min-max player")
+		play
 	}
 
 	def alphaBetaPlayer: Player[Grid, Mark] = {
@@ -77,7 +77,7 @@ object TicTacToeAutoPlayer {
 			val searchResult = AlphaBeta.findBestNode[Grid](grid, rules, hyper)
 			searchResult.bestChilds.head
 		}
-		Player(play, "TTT alpha-beta player")
+		play
 	}
 
 	def play(side: Mark, grid: Grid, player1: Player[Grid, Mark], player2: Player[Grid, Mark]): (Option[Mark], List[Grid]) = {

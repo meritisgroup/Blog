@@ -172,8 +172,11 @@ class CheckersBrainTest extends CheckersTest {
 	}
 
 	test("complete game") {
-		val weakestPlayer = CheckersTournament.buildPlayer(2, 1.0, 2.0)
-		val strongestPlayer = CheckersTournament.buildPlayer(6, 1.1, 10.0)
+		val brain1 = new CheckersBrain(AlphaBeta.findBestNode, HyperParameters(2), EvalParameters(1.0, 2.0))
+		val weakestPlayer = CheckersAutoPlayer.brainToPlayer(brain1)
+
+		val brain2 = new CheckersBrain(AlphaBeta.findBestNode, HyperParameters(6), EvalParameters(1.1, 10.0))
+		val strongestPlayer = CheckersAutoPlayer.brainToPlayer(brain2)
 
 		val result = Tournament.play(Board.init, White, Black,
 										weakestPlayer, strongestPlayer,
