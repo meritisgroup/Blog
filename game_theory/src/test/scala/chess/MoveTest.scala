@@ -64,7 +64,6 @@ class MoveTest extends FunSuite {
 
 		assert(count(before, piece.color) === count(after, piece.color))
 		assert(count(before, !piece.color) === count(after, !piece.color) + 1)
-
 	}
 
 	test("knight move") {
@@ -228,18 +227,16 @@ class MoveTest extends FunSuite {
 		assert(history.allowed(color, false) === false)
 	}
 
-	test("short castle white") {
+	test("short castle") {
 		shortCastle(1, White)
-	}
-
-	test("short castle black") {
 		shortCastle(8, Black)
 	}
 
 	def longCastle(y: Int, color: Color) {
 		val piece = Piece(color, King)
 		val yBis = if (y == 1) 2 else 7
-		val board = fromInit(List((B2, B3), (B7, B6), (B1, C3), (B8, C6), (C1, A3), (C8, A6), (E2, E3), (E7, E6), (D1, F3), (D8, F6)))
+		val board = fromInit(List((B2, B3), (B7, B6), (B1, C3), (B8, C6), (C1, A3), (C8, A6),
+									(E2, E3), (E7, E6), (D1, F3), (D8, F6)))
 		val list = new Moves(board, History(), color).legalMoves.filter(_.origin == Pos.posAt(5, y).get)
 
 		assert(list.size === 3)
@@ -260,12 +257,59 @@ class MoveTest extends FunSuite {
 		assert(history.allowed(color, false) === false)
 	}
 
-	test("long castle white") {
+	test("long castle") {
 		longCastle(1, White)
+		longCastle(8, Black)
 	}
 
-	test("long castle black") {
-		longCastle(8, Black)
+	test("prise en passant - black side") {
+		val board = fromInit(List((G2, G3), (D7, D4), (H7, H4)))
+		val moves = new Moves(board, History(), White).legalMoves
+
+		val move1 = moves.filter(move => move.origin == E2 && move.dest == E4).head
+		val all1 = new Moves(move1.after, move1.afterHistory, Black).legalMoves
+		val list1 = all1.filter(move => move.origin == D4 && move.dest == E3)
+
+		assert(list1.size === 1)
+		assert(list1.head.piece === Piece(Black, Pawn))
+		assert(list1.head.origin === D4)
+
+		val after = list1.head.after
+
+		assert(!after.contains(E4))
+		assert(count(move1.after, Black) === count(after, Black))
+		assert(count(move1.after, White) === count(after, White) + 1)
+
+		val move2 = moves.filter(move => move.origin == G3 && move.dest == G4).head
+		val all2 = new Moves(move2.after, move2.afterHistory, Black).legalMoves
+		val list2 = all2.filter(move => move.origin == H4 && move.dest == G3)
+
+		assert(list2.isEmpty)
+	}
+
+	test("prise en passant - white side") {
+		val board = fromInit(List((G7, G6), (D2, D5), (H2, H5)))
+		val moves = new Moves(board, History(), Black).legalMoves
+
+		val move1 = moves.filter(move => move.origin == E7 && move.dest == E5).head
+		val all1 = new Moves(move1.after, move1.afterHistory, Black).legalMoves
+		val list1 = all1.filter(move => move.origin == D5 && move.dest == E6)
+
+		assert(list1.size === 1)
+		assert(list1.head.piece === Piece(White, Pawn))
+		assert(list1.head.origin === D5)
+
+		val after = list1.head.after
+
+		assert(!after.contains(E5))
+		assert(count(move1.after, Black) === count(after, Black) + 1)
+		assert(count(move1.after, White) === count(after, White))
+
+		val move2 = moves.filter(move => move.origin == G6 && move.dest == G5).head
+		val all2 = new Moves(move2.after, move2.afterHistory, White).legalMoves
+		val list2 = all2.filter(move => move.origin == H5 && move.dest == G6)
+
+		assert(list2.isEmpty)
 	}
 
 }

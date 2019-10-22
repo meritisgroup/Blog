@@ -1,16 +1,29 @@
 package chess
 
+import scala.math.abs
+
 
 case class History(whiteShortCastlingAllowed: Boolean = true,
 					whiteLongCastlingAllowed: Boolean = true,
 					blackShortCastlingAllowed: Boolean = true,
-					blackLongCastlingAllowed: Boolean = true) {
+					blackLongCastlingAllowed: Boolean = true,
+					enPassant: Option[Pos] = None) {
 	
 	def allowed(color: Color, longSide: Boolean): Boolean = {
 		if (color == White) {
 			if (longSide) whiteLongCastlingAllowed else whiteShortCastlingAllowed
 		} else {
 			if (longSide) blackLongCastlingAllowed else blackShortCastlingAllowed
+		}
+	}
+
+	def allowed(color: Color, pawnPos: Pos): Boolean = {
+		if (enPassant.isEmpty) false
+		else {
+			val target = enPassant.get
+			if (color == Black && target.y == 3 && abs(pawnPos.x - target.x) == 1) true
+			else if (color == White && target.y == 6 && abs(pawnPos.x - target.x) == 1) true
+			else false
 		}
 	}
 
@@ -32,6 +45,21 @@ case class History(whiteShortCastlingAllowed: Boolean = true,
 			else if (origin.x == 8) copy(blackShortCastlingAllowed = false)
 			else this
 		}
+	}
+
+	def pawnMovedBy2(color: Color, x: Int): History = {
+		val target =
+			if (color == White) Pos.posAt(x, 3)
+			else if (color == Black) Pos.posAt(x, 6)
+			else None
+
+		if (target == enPassant) this
+		else copy(enPassant = target)
+	}
+
+	def resetEnPassant: History = {
+		if (enPassant == None) this
+		else copy(enPassant = None)
 	}
 
 }

@@ -67,29 +67,46 @@ class Moves(val current: Board, val currentHistory: History, val sideToPlay: Col
 
 		def moveBy2(from: Pos): Option[Move] = movingDir(from) match {
 			case Some(to) if !current.contains(to) =>
-				current.move(pos, to) map { after => Move(piece, pos, to, after, currentHistory) }
+				current.move(pos, to) map { after =>
+					Move(piece, pos, to, after, currentHistory.pawnMovedBy2(piece.color, pos.x))
+				}
 			case _ => None
 		}
 
 		def moveBy1or2: List[Move] = movingDir(pos) match {
 			case Some(to) if !current.contains(to) => {
-				val c1 = current.move(pos, to) map { after => Move(piece, pos, to, after, currentHistory) }
+				val c1 = current.move(pos, to) map { after =>
+					Move(piece, pos, to, after, currentHistory.resetEnPassant)
+				}
+
 				if (c1.isEmpty) Nil
 				else if (!firstLine(pos.y)) List(c1.get)
 				else List(c1, moveBy2(to)).flatten
 			}
+
 			case _ => Nil
 		}
 
 		def takeCross(dir: Direction): Option[Move] = dir(pos) match {
 			case Some(to) if current.contains(to) && !current(to).get.is(piece.color) =>
-				current.take(pos, to) map { after => Move(piece, pos, to, after, currentHistory) }
+				current.take(pos, to) map { after =>
+					Move(piece, pos, to, after, currentHistory.resetEnPassant)
+				}
 			case _ => None
+		}
+
+		def takeEnPassant: Option[Move] = {
+			if (currentHistory.allowed(piece.color, pos)) {
+				val taken = Pos.posAt(currentHistory.enPassant.get.x, if (piece.color == White) 5 else 4)
+				current.take(pos, currentHistory.enPassant.get, taken.get) map { after =>
+					Move(piece, pos, currentHistory.enPassant.get, after, currentHistory.resetEnPassant)
+				}
+			} else None
 		}
 
 		def taken: List[Move] = Moves.pawnTakingDirs(piece.color) flatMap { dir => takeCross(dir) }
 
-		moveBy1or2 ++ taken
+		moveBy1or2 ++ taken ++ takeEnPassant
 	}
 
 	def promote(move: Move): Move = {
