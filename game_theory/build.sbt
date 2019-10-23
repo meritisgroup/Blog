@@ -1,4 +1,4 @@
-Test / parallelExecution := false
+//Test / parallelExecution := false
 Test / logBuffered := false
 
 resolvers += "Sonatype OSS Snapshots" at
