@@ -239,9 +239,9 @@ class MoveTest extends FunSuite {
 									(E2, E3), (E7, E6), (D1, F3), (D8, F6)))
 		val list = new Moves(board, History(), color).legalMoves.filter(_.origin == Pos.posAt(5, y).get)
 
-		assert(list.size === 3)
+		assert(list.size === 2)
 		assert(list.map(_.piece).toSet === Set(piece))
-		assert(list.map(_.dest).toSet === Set(Pos.posAt(4, y).get, Pos.posAt(3, y).get, Pos.posAt(5, yBis).get))
+		assert(list.map(_.dest).toSet === Set(Pos.posAt(4, y).get, Pos.posAt(3, y).get))
 
 		val move = list.find(move => move.dest == Pos.posAt(3, y).get).get
 

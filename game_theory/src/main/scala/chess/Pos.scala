@@ -32,6 +32,10 @@ object Pos {
 		else posCache(x + 8 * y - 9)
 	}
 
+	def distance2(from: Pos, to: Pos): Int = {
+		(from.x - to.x) * (from.x - to.x) + (from.y - to.y) * (from.y - to.y)
+	}
+
 	private[this] def createPos(x: Int, y: Int): Pos = {
 		val pos = new Pos(x, y)
 		posCache(x + 8 * y - 9) = Some(pos)

@@ -28,21 +28,23 @@ case class History(whiteShortCastlingAllowed: Boolean = true,
 	}
 
 	def kingMoved(color: Color): History = {
-		if (color == White) {
+		if (color == White && (whiteShortCastlingAllowed || whiteLongCastlingAllowed)) {
 			copy(whiteShortCastlingAllowed = false, whiteLongCastlingAllowed = false)
-		} else {
+		} else if (color == Black && (blackShortCastlingAllowed || blackLongCastlingAllowed)) {
 			copy(blackShortCastlingAllowed = false, blackLongCastlingAllowed = false)
+		} else {
+			this
 		}
 	}
 
 	def rookMoved(color: Color, origin: Pos): History = {
 		if (color == White) {
-			if (origin.x == 1) copy(whiteLongCastlingAllowed = false)
-			else if (origin.x == 8) copy(whiteShortCastlingAllowed = false)
+			if (origin.x == 1 && whiteLongCastlingAllowed) copy(whiteLongCastlingAllowed = false)
+			else if (origin.x == 8 && whiteShortCastlingAllowed) copy(whiteShortCastlingAllowed = false)
 			else this
 		} else {
-			if (origin.x == 1) copy(blackLongCastlingAllowed = false)
-			else if (origin.x == 8) copy(blackShortCastlingAllowed = false)
+			if (origin.x == 1 && blackLongCastlingAllowed) copy(blackLongCastlingAllowed = false)
+			else if (origin.x == 8 && blackShortCastlingAllowed) copy(blackShortCastlingAllowed = false)
 			else this
 		}
 	}

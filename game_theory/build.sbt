@@ -10,5 +10,6 @@ lazy val root = (project in file("."))
 	.settings(
 		name := "Meritis Blog - Game Theory",
 		libraryDependencies += "org.scalatest" %% "scalatest" % "3.0.5" % "test",
-		libraryDependencies += "com.storm-enroute" %% "scalameter" % "0.18"
+		libraryDependencies += "com.storm-enroute" %% "scalameter" % "0.18",
+		libraryDependencies += "com.github.blemale" %% "scaffeine" % "3.1.0" % "compile"
 	)
