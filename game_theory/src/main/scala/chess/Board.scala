@@ -11,6 +11,12 @@ case class Board(pieces: Map[Pos, Piece], hash: Long) {
 
 	def contains(at: Pos): Boolean = pieces contains at
 
+	lazy val kingPos: Map[Color, Pos] = pieces.collect {
+		case (pos, Piece(color, King)) => color -> pos
+	}
+
+	def findKingPos(color: Color): Option[Pos] = kingPos get color
+
 	def place(piece: Piece, at: Pos): Option[Board] = {
 		if (pieces contains at) None
 		else Some(copy(pieces = pieces + ((at, piece)),
@@ -71,24 +77,6 @@ case class Board(pieces: Map[Pos, Piece], hash: Long) {
 	def updateHash(acc: Long, pos: Pos, piece: Option[Piece]): Long = {
 		ZobristHashChess.replace(acc, pos, pieces.get(pos), piece)
 	}
-
-	/*def evaluate(refColor: Color): Double = {
-		def evaluateEach(pos: Pos, piece: Piece): Double = piece.role match {
-			case Pawn => 1
-			case Rook => 5
-			case Bishop => 3
-			case Knight => 3
-			case Queen => 9
-			case _ => 0
-		}
-
-		pieces.foldLeft(0.0)((acc, elt) => {
-			val eltColor = elt._2.color
-			if (eltColor == refColor) acc + evaluateEach(elt._1, elt._2)
-			else acc - evaluateEach(elt._1, elt._2)
-		})
-	}*/
-
 
 }
 

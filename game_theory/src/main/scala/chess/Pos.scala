@@ -1,6 +1,8 @@
 package chess
 
+import scala.annotation.tailrec
 import scala.math.abs
+import chess._
 
 
 sealed case class Pos private (x: Int, y: Int) {
@@ -19,6 +21,26 @@ sealed case class Pos private (x: Int, y: Int) {
 	def onSameDiagonal(other: Pos): Boolean = abs(x - other.x) == abs(y - other.y)
 	def onSameLine(other: Pos): Boolean = (y == other.y) || (x == other.x)
 
+	def findDir(to: Pos): Option[Direction] = {
+		if (!onSameLine(to) && !onSameDiagonal(to)) None
+		else {
+			val dx = if (to.x == x) 0 else if (to.x > x) 1 else -1
+			val dy = if (to.y == y) 0 else if (to.y > y) 1 else -1
+
+			(dx, dy) match {
+				case (1, 1) =>   Some(_.upRight)
+				case (1, -1) =>  Some(_.downRight)
+				case (-1, 1) =>  Some(_.upLeft)
+				case (-1, -1) => Some(_.downLeft)
+				case (1, 0) => Some(_.right)
+				case (-1, 0) => Some(_.left)
+				case (0, 1) => Some(_.up)
+				case (0, -1) => Some(_.down)
+				case _ => None
+			}
+		}
+	}
+
 	override val hashCode = 8 * (y - 1) + (x - 1)
 
 }
@@ -34,6 +56,17 @@ object Pos {
 
 	def distance2(from: Pos, to: Pos): Int = {
 		(from.x - to.x) * (from.x - to.x) + (from.y - to.y) * (from.y - to.y)
+	}
+
+	def checkAll(from: Pos, to: Pos, stop: Pos => Boolean): Boolean = {
+		@tailrec
+		def rec(pos: Pos, dir: Direction): Boolean = dir(pos) match {
+			case Some(next) if next == to => true
+			case Some(next) if !stop(next) => rec(next, dir)
+			case _ => false
+		}
+
+		from.findDir(to).exists(dir => rec(from, dir))
 	}
 
 	private[this] def createPos(x: Int, y: Int): Pos = {

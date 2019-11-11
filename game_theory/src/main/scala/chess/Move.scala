@@ -12,23 +12,29 @@ class Moves(val current: Board, val currentHistory: History, val sideToPlay: Col
 	lazy val gameStatus: Option[Status] = computeStatus
 	lazy val nextBoards: List[Board] = legalMoves map { move => move.after }
 
+	val kingInCheck: Boolean = Moves.kingThreatened(current, sideToPlay)
+
 	val opponentSide = !sideToPlay
 
 	def computeStatus: Option[Status] = {
-		None
+		if (!nextBoards.isEmpty) None
+		else if (kingInCheck) Some(Mate)
+		else Some(Draw)
 	}
 
 	def legalMoves: List[Move] = {
-		current.pieces flatMap {
-			case (pos, piece) => piece.role match {
-				case Bishop => safeKingFilter(longRange(piece, pos, Bishop.dirs))
-				case Knight => safeKingFilter(shortRange(piece, pos, Knight.dirs))
-				case Rook => rookMovedNoCastle(safeKingFilter(longRange(piece, pos, Rook.dirs)))
-				case Queen => safeKingFilter(longRange(piece, pos, Queen.dirs))
-				case King => safeKingFilter(kinkMovedNoCastle(shortRange(piece, pos, King.dirs)) ++ castle(piece, pos))
-				case Pawn => promoteAll(safeKingFilter(pawnMoves(piece, pos)))
-			}
-		} toList
+		current.pieces
+			.collect { case (pos, piece) if piece is sideToPlay =>
+				piece.role match {
+					case Bishop => safeKingFilter(longRange(piece, pos, Bishop.dirs))
+					case Knight => safeKingFilter(shortRange(piece, pos, Knight.dirs))
+					case Rook => rookMovedNoCastle(safeKingFilter(longRange(piece, pos, Rook.dirs)))
+					case Queen => safeKingFilter(longRange(piece, pos, Queen.dirs))
+					case King => safeKingFilter(kinkMovedNoCastle(shortRange(piece, pos, King.dirs))) ++ castle(piece, pos)
+					case Pawn => promoteAll(safeKingFilter(pawnMoves(piece, pos)))
+				}}
+			.flatten
+			.toList
 	}
 
 	def longRange(piece: Piece, pos: Pos, dirs: Directions): List[Move] = {
@@ -36,12 +42,16 @@ class Moves(val current: Board, val currentHistory: History, val sideToPlay: Col
 		def rec(from: Pos, dir: Direction, list: List[Move] = Nil): List[Move] = dir(from) match {
 			case Some(to) => {
 				if (!current.contains(to)) {
-					val newMove = current.move(pos, to) map { after => Move(piece, pos, to, after, currentHistory) }
-					if (newMove.isEmpty) list else rec(to, dir, newMove.get :: list)
+					current.move(pos, to).map(after => Move(piece, pos, to, after, currentHistory)) match {
+						case Some(move) => rec(to, dir, move :: list)
+						case _ => list
+					}
 
 				} else if (!current(to).get.is(piece.color)) {
-					val newMove = current.take(pos, to) map { after => Move(piece, pos, to, after, currentHistory) }
-					if (newMove.isEmpty) list else newMove.get :: list
+					current.take(pos, to).map(after => Move(piece, pos, to, after, currentHistory)) match {
+						case Some(move) => move :: list
+						case _ => list
+					}
 
 				} else {
 					list
@@ -131,27 +141,33 @@ class Moves(val current: Board, val currentHistory: History, val sideToPlay: Col
 	}
 
 	def rookMovedNoCastle(moves: List[Move]): List[Move] = {
-		def update(move: Move): Move = {
+		moves map { move =>
 			move.copy(afterHistory = move.afterHistory.rookMoved(sideToPlay, move.origin))
 		}
-		moves map update
 	}
 
 	def kinkMovedNoCastle(moves: List[Move]): List[Move] = {
-		def update(move: Move): Move = {
+		moves map { move =>
 			move.copy(afterHistory = move.afterHistory.kingMoved(sideToPlay))
 		}
-		moves map update
 	}
 
 	def castle(piece: Piece, pos: Pos): List[Move] = {
+		val shortAllowed = currentHistory.allowed(sideToPlay, false)
+		val longAllowed = currentHistory.allowed(sideToPlay, true)
+
+		def stopCheck(ref: Pos): Boolean = {
+			current.contains(ref) || Moves.posThreatened(current, sideToPlay, ref)
+		}
+
+		def stopContains(ref: Pos): Boolean = current.contains(ref)
+
 		def shortCastle: Option[Move] = {
 			val kingDest = Pos.posAt(7, pos.y).get
-			val rookOrigin = Pos.posAt(8, pos.y).get
-			val rookDest = Pos.posAt(6, pos.y).get
 
-			if (currentHistory.allowed(sideToPlay, false)
-					&& !current.contains(kingDest) && !current.contains(rookDest)) {
+			if (Pos.checkAll(pos, kingDest, stopCheck)) {
+				val rookOrigin = Pos.posAt(8, pos.y).get
+				val rookDest = Pos.posAt(6, pos.y).get
 
 				for (b1 <- current.move(pos, kingDest); after <- b1.move(rookOrigin, rookDest))
 				yield Move(piece, pos, kingDest, after, currentHistory.kingMoved(sideToPlay))
@@ -163,68 +179,22 @@ class Moves(val current: Board, val currentHistory: History, val sideToPlay: Col
 			val kingDest = Pos.posAt(3, pos.y).get
 			val rookOrigin = Pos.posAt(1, pos.y).get
 			val rookDest = Pos.posAt(4, pos.y).get
-			val temp = Pos.posAt(2, pos.y).get
 
-			if (currentHistory.allowed(sideToPlay, true)
-					&& !current.contains(kingDest) && !current.contains(rookDest) && !current.contains(temp)) {
-
+			if (Pos.checkAll(pos, kingDest, stopCheck) && Pos.checkAll(rookOrigin, rookDest, stopContains)) {
 				for (b1 <- current.move(pos, kingDest); after <- b1.move(rookOrigin, rookDest))
 				yield Move(piece, pos, kingDest, after, currentHistory.kingMoved(sideToPlay))
-			
+
 			} else None
 		}
 
-		List(shortCastle, longCastle).flatten
+		if (!shortAllowed && !longAllowed) Nil
+		else if (kingInCheck) Nil
+		else List(if (!shortAllowed) None else shortCastle,
+					if (!longAllowed) None else longCastle).flatten
 	}
 
 	def safeKingFilter(moves: List[Move]): List[Move] = {
-		def findDir(from: Pos, to: Pos): Option[Direction] = {
-			val dx = if (to.x == from.x) 0 else if (to.x > from.x) 1 else -1
-			val dy = if (to.y == from.y) 0 else if (to.y > from.y) 1 else -1
-
-			(dx, dy) match {
-				case (1, 1) =>   Some(_.upRight)
-				case (1, -1) =>  Some(_.downRight)
-				case (-1, 1) =>  Some(_.upLeft)
-				case (-1, -1) => Some(_.downLeft)
-				case (1, 0) => Some(_.right)
-				case (-1, 0) => Some(_.left)
-				case (0, 1) => Some(_.up)
-				case (0, -1) => Some(_.down)
-				case _ => None
-			}
-		}
-
-		def findKingPos(board: Board): Option[Pos] = {
-			val king = board.pieces.find(elt => elt._2.role == King && (elt._2 is sideToPlay))
-			king map (elt => elt._1)
-		}
-
-		def kingThreatened(board: Board, kingPos: Pos): Boolean = {
-			@tailrec
-			def emptyInBetween(from: Pos, to: Pos, dir: Direction): Boolean = dir(from) match {
-				case Some(pos) if pos == to => true
-				case Some(pos) if !board.contains(pos) => emptyInBetween(pos, to, dir)
-				case _ => false
-			}
-
-			def pieceThreatenKing(pos: Pos, piece: Piece): Boolean = piece.role match {
-				case King if Pos.distance2(pos, kingPos) <= 2 => true
-				case Bishop if kingPos.onSameDiagonal(pos) => findDir(pos, kingPos)
-																.exists(dir => emptyInBetween(pos, kingPos, dir))
-				case Rook if kingPos.onSameLine(pos) => findDir(pos, kingPos)
-															.exists(dir => emptyInBetween(pos, kingPos, dir))
-				case Queen if (kingPos.onSameLine(pos) || kingPos.onSameDiagonal(pos)) => findDir(pos, kingPos)
-																							.exists(dir => emptyInBetween(pos, kingPos, dir))
-				case Knight if Pos.distance2(pos, kingPos) == 5 => true
-				case Pawn if Pos.distance2(pos, kingPos) == 2 => piece.pawnTakingDirs.exists(dir => dir(pos) == kingPos)
-				case _ => false
-			}
-
-			board.pieces.exists(elt => (elt._2 is !sideToPlay) && pieceThreatenKing(elt._1, elt._2))
-		}
-
-		moves.filterNot(move => findKingPos(move.after).exists(kingPos => kingThreatened(move.after, kingPos)))
+		moves.filter(move => !Moves.kingThreatened(move.after, sideToPlay))
 	}
 
 }
@@ -234,6 +204,26 @@ object Moves {
 
 	def computeHash(current: Board, sideToPlay: Color): Long = {
 		ZobristHashChess.addSide(current.hash, sideToPlay)
+	}
+
+	def kingThreatened(board: Board, color: Color): Boolean = {
+		val kingPos = board.findKingPos(color)
+		if (kingPos.isEmpty) false
+		else posThreatened(board, color, kingPos.get)
+	}
+
+	def posThreatened(board: Board, color: Color, ref: Pos): Boolean = {
+		def pieceThreatenRef(pos: Pos, piece: Piece): Boolean = piece.role match {
+			case King if Pos.distance2(pos, ref) <= 2 => true
+			case Bishop if ref.onSameDiagonal(pos) => Pos.checkAll(pos, ref, pos => board.contains(pos))
+			case Rook if ref.onSameLine(pos) => Pos.checkAll(pos, ref, pos => board.contains(pos))
+			case Queen if (ref.onSameLine(pos) || ref.onSameDiagonal(pos)) => Pos.checkAll(pos, ref, pos => board.contains(pos))
+			case Knight if Pos.distance2(pos, ref) == 5 => true
+			case Pawn if Pos.distance2(pos, ref) == 2 => piece.pawnTakingDirs.exists(dir => dir(pos) == Some(ref))
+			case _ => false
+		}
+
+		board.pieces.exists(elt => (elt._2 is !color) && pieceThreatenRef(elt._1, elt._2))
 	}
 
 }

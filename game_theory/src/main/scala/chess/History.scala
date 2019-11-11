@@ -18,13 +18,8 @@ case class History(whiteShortCastlingAllowed: Boolean = true,
 	}
 
 	def allowed(color: Color, pawnPos: Pos): Boolean = {
-		if (enPassant.isEmpty) false
-		else {
-			val target = enPassant.get
-			if (color == Black && target.y == 3 && abs(pawnPos.x - target.x) == 1) true
-			else if (color == White && target.y == 6 && abs(pawnPos.x - target.x) == 1) true
-			else false
-		}
+		val refY = if (color == White) 6 else 3
+		enPassant.exists(target => abs(pawnPos.x - target.x) == 1 && target.y == refY)
 	}
 
 	def kingMoved(color: Color): History = {

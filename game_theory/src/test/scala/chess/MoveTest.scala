@@ -29,13 +29,18 @@ class MoveTest extends FunSuite {
 		Board.empty.place(piece, origin).get
 	}
 
-	def fromInit(list: List[(Pos, Pos)]): Board = {
-		def rec(board: Board, elt: (Pos,Pos)): Board = {
-			if (board.contains(elt._2)) board.take(elt._1, elt._2).get
-			else board.move(elt._1, elt._2).get
+	def fromEmpty(list: List[(Piece, Pos)], board: Board = Board.empty): Board = list match {
+		case head :: tail => fromEmpty(tail, board.place(head._1, head._2).get)
+		case Nil => board
+	}
+
+	def playGame(list: List[(Pos, Pos)], game: Moves = new Moves(Board.init, History(), White)): Moves = {
+		def rec(game: Moves, elt: (Pos,Pos)): Moves = {
+			val list = game.legalMoves.filter(move => move.origin == elt._1 && move.dest == elt._2)
+			new Moves(list.head.after, list.head.afterHistory, !game.sideToPlay)
 		}
 
-		list.foldLeft(Board.init)(rec)
+		list.foldLeft(game)(rec)
 	}
 
 	def count(board: Board, color: Color): Int = {
@@ -50,7 +55,8 @@ class MoveTest extends FunSuite {
 		assert(list.map(_.dest).toSet === refs)
 	}
 
-	def checkTake(before: Board, piece: Piece, origin: Pos, dest: Pos) {
+	def checkTake(before: Board, origin: Pos, dest: Pos) {
+		val piece = before(origin).get
 		val moves = new Moves(before, History(), piece.color).legalMoves
 		val list = moves.filter(move => move.origin == origin && move.dest == dest)
 
@@ -80,16 +86,12 @@ class MoveTest extends FunSuite {
 	}
 
 	test("knight capture") {
-		val piece = Piece(White, Knight)
-
-		val board = fromInit(List((B7, B5), (B1, A3), (H7, H6)))
-		checkTake(board, piece, A3, B5)
+		val board = fromEmpty(List((Piece(White, Knight), A3), (Piece(Black, Pawn), B5)))
+		checkTake(board, A3, B5)
 	}
 
 	test("king move") {
-		val piece = Piece(White, King)
-
-		val board1 = fromEmpty(piece, C3)
+		val board1 = fromEmpty(Piece(White, King), C3)
 		checkMove(board1, C3, Set(C2, D2, D3, D4, C4, B4, B3, B2))
 
 		val board2 = Board.init.move(E2, E4).get
@@ -100,16 +102,12 @@ class MoveTest extends FunSuite {
 	}
 
 	test("king capture") {
-		val piece = Piece(White, King)
-
-		val board = fromInit(List((E7, E2)))
-		checkTake(board, piece, E1, E2)
+		val board = fromEmpty(List((Piece(White, King), E1), (Piece(Black, Pawn), E2)))
+		checkTake(board, E1, E2)
 	}
 
 	test("bishop move") {
-		val piece = Piece(Black, Bishop)
-
-		val board1 = fromEmpty(piece, D4)
+		val board1 = fromEmpty(Piece(Black, Bishop), D4)
 		checkMove(board1, D4, Set(C5, B6, A7, E3, F2, G1, C3, B2, A1, E5, F6, G7, H8))
 
 		val board2 = Board.init.move(G7, G6).get
@@ -120,16 +118,12 @@ class MoveTest extends FunSuite {
 	}
 
 	test("bishop capture") {
-		val piece = Piece(Black, Bishop)
-
-		val board = fromInit(List((E7, E6), (A2, A3)))
-		checkTake(board, piece, F8, A3)
+		val board = fromEmpty(List((Piece(Black, Bishop), F8), (Piece(White, Pawn), A3)))
+		checkTake(board, F8, A3)
 	}
 
 	test("rook move") {
-		val piece = Piece(Black, Rook)
-
-		val board1 = fromEmpty(piece, D4)
+		val board1 = fromEmpty(Piece(Black, Rook), D4)
 		checkMove(board1, D4, Set(A4, B4, C4, E4, F4, G4, H4, D1, D2, D3, D5, D6, D7, D8))
 
 		val board2 = Board.init.move(A7, A5).get
@@ -140,20 +134,16 @@ class MoveTest extends FunSuite {
 	}
 
 	test("rook capture") {
-		val piece = Piece(Black, Rook)
-
-		val board = fromInit(List((B2, B4), (A7, A5), (B4, A5)))
-		checkTake(board, piece, A8, A5)
+		val board = fromEmpty(List((Piece(Black, Rook), A8), (Piece(White, Pawn), A5)))
+		checkTake(board, A8, A5)
 	}
 
 	test("queen move") {
-		val piece = Piece(White, Queen)
-
-		val board1 = fromEmpty(piece, D4)
+		val board1 = fromEmpty(Piece(White, Queen), D4)
 		checkMove(board1, D4, Set(A4, B4, C4, E4, F4, G4, H4, D1, D2, D3, D5, D6, D7, D8,
 								C5, B6, A7, E3, F2, G1, C3, B2, A1, E5, F6, G7, H8))
 
-		val board2 = fromEmpty(piece, H8)
+		val board2 = fromEmpty(Piece(White, Queen), H8)
 		checkMove(board2, H8, Set(H7, H6, H5, H4, H3, H2, H1, A8, B8, C8, D8, E8, F8, G8,
 								A1, B2, C3, D4, E5, F6, G7))
 
@@ -165,27 +155,21 @@ class MoveTest extends FunSuite {
 	}
 
 	test("queen capture") {
-		val piece = Piece(White, Queen)
-
-		val board = fromInit(List((C2, C3), (G7, G6), (D1, B3), (A7, A6)))
-		checkTake(board, piece, B3, F7)
+		val board = fromEmpty(List((Piece(White, Queen), B3), (Piece(Black, Pawn), F7)))
+		checkTake(board, B3, F7)
 	}
 
 	test("pawn move") {
-		val piece = Piece(White, Pawn)
-
-		val board1 = fromEmpty(piece, D2)
+		val board1 = fromEmpty(Piece(White, Pawn), D2)
 		checkMove(board1, D2, Set(D3, D4))
 
-		val board2 = fromEmpty(piece, D3)
+		val board2 = fromEmpty(Piece(White, Pawn), D3)
 		checkMove(board2, D3, Set(D4))
 	}
 
 	test("pawn capture") {
-		val piece = Piece(Black, Pawn)
-
-		val board = fromInit(List((E2, E4), (D7, D5)))
-		checkTake(board, piece, D5, E4)
+		val board = fromEmpty(List((Piece(Black, Pawn), D5), (Piece(White, Pawn), E4)))
+		checkTake(board, D5, E4)
 	}
 
 	test("pawn promotion") {
@@ -205,111 +189,198 @@ class MoveTest extends FunSuite {
 		assert(move.after(D8) === Some(Piece(White, Queen)))
 	}
 
-	def shortCastle(y: Int, color: Color) {
-		val piece = Piece(color, King)
-		val board = fromInit(List((G2, G3), (G7, G6), (G1, F3), (G8, F6), (F1, H3), (F8, H6)))
-		val list = new Moves(board, History(), color).legalMoves.filter(_.origin == Pos.posAt(5, y).get)
-
-		assert(list.size === 2)
-		assert(list.map(_.piece).toSet === Set(piece))
-		assert(list.map(_.dest).toSet === Set(Pos.posAt(6, y).get, Pos.posAt(7, y).get))
-
-		val move = list.find(move => move.dest == Pos.posAt(7, y).get).get
-
-		assert(!move.after.contains(Pos.posAt(5, y).get))
-		assert(!move.after.contains(Pos.posAt(8, y).get))
-		assert(move.after(Pos.posAt(6, y).get) === Some(Piece(color, Rook)))
-		assert(move.after(Pos.posAt(7, y).get) === Some(Piece(color, King)))
-
-		val history = move.afterHistory
-
-		assert(history.allowed(color, true) === false)
-		assert(history.allowed(color, false) === false)
-	}
-
-	test("short castle") {
-		shortCastle(1, White)
-		shortCastle(8, Black)
-	}
-
-	def longCastle(y: Int, color: Color) {
-		val piece = Piece(color, King)
-		val yBis = if (y == 1) 2 else 7
-		val board = fromInit(List((B2, B3), (B7, B6), (B1, C3), (B8, C6), (C1, A3), (C8, A6),
-									(E2, E3), (E7, E6), (D1, F3), (D8, F6)))
-		val list = new Moves(board, History(), color).legalMoves.filter(_.origin == Pos.posAt(5, y).get)
-
-		assert(list.size === 2)
-		assert(list.map(_.piece).toSet === Set(piece))
-		assert(list.map(_.dest).toSet === Set(Pos.posAt(4, y).get, Pos.posAt(3, y).get))
-
-		val move = list.find(move => move.dest == Pos.posAt(3, y).get).get
-
-		assert(!move.after.contains(Pos.posAt(5, y).get))
-		assert(!move.after.contains(Pos.posAt(1, y).get))
-		assert(!move.after.contains(Pos.posAt(2, y).get))
-		assert(move.after(Pos.posAt(4, y).get) === Some(Piece(color, Rook)))
-		assert(move.after(Pos.posAt(3, y).get) === Some(Piece(color, King)))
-
-		val history = move.afterHistory
-
-		assert(history.allowed(color, true) === false)
-		assert(history.allowed(color, false) === false)
-	}
-
-	test("long castle") {
-		longCastle(1, White)
-		longCastle(8, Black)
-	}
-
 	test("prise en passant - black side") {
-		val board = fromInit(List((G2, G3), (D7, D4), (H7, H4)))
-		val moves = new Moves(board, History(), White).legalMoves
+		val initialGame = playGame(List((G2, G3), (D7, D5),
+								(A2, A3), (D5, D4),
+								(A3, A4), (H7, H5),
+								(A4, A5), (H5, H4)))
 
-		val move1 = moves.filter(move => move.origin == E2 && move.dest == E4).head
-		val all1 = new Moves(move1.after, move1.afterHistory, Black).legalMoves
-		val list1 = all1.filter(move => move.origin == D4 && move.dest == E3)
+		val game = playGame(List((E2, E4)), initialGame)
+		val list = game.legalMoves.filter(move => move.origin == D4 && move.dest == E3)
 
-		assert(list1.size === 1)
-		assert(list1.head.piece === Piece(Black, Pawn))
-		assert(list1.head.origin === D4)
+		assert(list.size === 1)
+		assert(list.head.piece === Piece(Black, Pawn))
 
-		val after = list1.head.after
+		val after = list.head.after
 
 		assert(!after.contains(E4))
-		assert(count(move1.after, Black) === count(after, Black))
-		assert(count(move1.after, White) === count(after, White) + 1)
+		assert(count(game.current, Black) === count(after, Black))
+		assert(count(game.current, White) === count(after, White) + 1)
 
-		val move2 = moves.filter(move => move.origin == G3 && move.dest == G4).head
-		val all2 = new Moves(move2.after, move2.afterHistory, Black).legalMoves
-		val list2 = all2.filter(move => move.origin == H4 && move.dest == G3)
+		val list2 = playGame(List((G3, G4)), initialGame)
+						.legalMoves.filter(move => move.origin == D5 && move.dest == E6)
 
 		assert(list2.isEmpty)
 	}
 
 	test("prise en passant - white side") {
-		val board = fromInit(List((G7, G6), (D2, D5), (H2, H5)))
-		val moves = new Moves(board, History(), Black).legalMoves
+		val initialGame = playGame(List((D2, D4), (G7, G6),
+								(D4, D5), (A7, A6),
+								(H2, H4), (A6, A5),
+								(H4, H5)))
 
-		val move1 = moves.filter(move => move.origin == E7 && move.dest == E5).head
-		val all1 = new Moves(move1.after, move1.afterHistory, Black).legalMoves
-		val list1 = all1.filter(move => move.origin == D5 && move.dest == E6)
+		val game = playGame(List((E7, E5)), initialGame)
+		val list = game.legalMoves.filter(move => move.origin == D5 && move.dest == E6)
 
-		assert(list1.size === 1)
-		assert(list1.head.piece === Piece(White, Pawn))
-		assert(list1.head.origin === D5)
+		assert(list.size === 1)
+		assert(list.head.piece === Piece(White, Pawn))
 
-		val after = list1.head.after
+		val after = list.head.after
 
 		assert(!after.contains(E5))
-		assert(count(move1.after, Black) === count(after, Black) + 1)
-		assert(count(move1.after, White) === count(after, White))
+		assert(count(game.current, Black) === count(after, Black) + 1)
+		assert(count(game.current, White) === count(after, White))
 
-		val move2 = moves.filter(move => move.origin == G6 && move.dest == G5).head
-		val all2 = new Moves(move2.after, move2.afterHistory, White).legalMoves
-		val list2 = all2.filter(move => move.origin == H5 && move.dest == G6)
+		val list2 = playGame(List((G6, G5)), initialGame)
+						.legalMoves.filter(move => move.origin == D5 && move.dest == E6)
 
 		assert(list2.isEmpty)
+	}
+
+	def checkCastle(color: Color, game: Moves, kingFrom: Pos, kingTo: Pos, rookFrom: Pos, rookTo: Pos) = {
+		val list = game.legalMoves.filter(move => move.origin == kingFrom && move.dest == kingTo)
+
+		assert(list.size === 1)
+
+		val move = list.head
+
+		assert(move.piece === Piece(color, King))
+		assert(!move.after.contains(kingFrom))
+
+		val dir = rookFrom.findDir(rookTo).get
+		val rookMove = List(rookFrom, dir(rookFrom).get).filter(p => p != rookTo && p != kingTo)
+		for (pos <- rookMove) assert(!move.after.contains(pos))
+
+		assert(move.after(rookTo) === Some(Piece(color, Rook)))
+		assert(move.after(kingTo) === Some(Piece(color, King)))
+
+		val history = move.afterHistory
+
+		assert(history.allowed(color, true) === false)
+		assert(history.allowed(color, false) === false)
+	}
+
+	test("castle") {
+		val shortCastleWhite = playGame(List((G2, G3), (G7, G6), (G1, F3), (G8, F6),
+											(F1, H3), (F8, H6)))
+
+		val shortCastleBlack = playGame(List((A2, A3)), shortCastleWhite)
+
+		val longCastleWhite = playGame(List((B2, B3), (B7, B6), (B1, C3), (B8, C6),
+											(C1, A3), (C8, A6), (E2, E3), (E7, E6),
+											(D1, F3), (D8, F6)))
+
+		val longCastleBlack = playGame(List((H2, H3)), longCastleWhite)
+
+		checkCastle(White, shortCastleWhite, E1, G1, H1, F1)
+		checkCastle(Black, shortCastleBlack, E8, G8, H8, F8)
+		checkCastle(White, longCastleWhite, E1, C1, A1, D1)
+		checkCastle(Black, longCastleBlack, E8, C8, A8, D8)
+	}
+
+	test("short castle not allowed after rook or king moved") {
+		val shortCastle = playGame(List((G2, G3), (G7, G6), (G1, F3), (G8, F6),
+										(E2, E3), (E7, E6), (F1, D3), (F8, D6),
+										(H2, H3), (H7, H6)))
+
+		assert(!shortCastle.legalMoves.filter(move => move.origin == E1 && move.dest == G1).isEmpty)
+
+		val whiteKingMoved = playGame(List((E1, E2), (E8, E7), (E2, E1), (E7, E8)), shortCastle)
+		assert(whiteKingMoved.legalMoves.filter(move => move.origin == E1 && move.dest == G1).isEmpty)
+
+		val shortCastleBlack = playGame(List((A2, A3)), shortCastle)
+		assert(!shortCastleBlack.legalMoves.filter(move => move.origin == E8 && move.dest == G8).isEmpty)
+
+		val blackRookMoved = playGame(List((H1, H2), (H8, H7), (H2, H1), (H7, H8), (A2, A3)), shortCastle)
+		assert(blackRookMoved.legalMoves.filter(move => move.origin == E8 && move.dest == G8).isEmpty)
+	}
+
+	test("long castle not allowed after rook or king moved") {
+		val longCastle = playGame(List((B2, B3), (B7, B6), (B1, C3), (B8, C6),
+										(D2, D3), (D7, D6), (C1, F4), (C8, F5),
+										(E2, E3), (E7, E6), (D1, F3), (D8, F6),
+										(A2, A3), (A7, A6)))
+
+		val longCastleBlack = playGame(List((H2, H3)), longCastle)
+		assert(!longCastleBlack.legalMoves.filter(move => move.origin == E8 && move.dest == C8).isEmpty)
+
+		val blackKingMoved = playGame(List((E1, E2), (E8, E7), (E2, E1), (E7, E8), (H2, H3)), longCastle)
+		assert(blackKingMoved.legalMoves.filter(move => move.origin == E8 && move.dest == G8).isEmpty)
+
+		assert(!longCastle.legalMoves.filter(move => move.origin == E1 && move.dest == C1).isEmpty)
+
+		val whiteRookMoved = playGame(List((A1, A2), (A8, A7), (A2, A1), (A7, A8)), longCastle)
+		assert(whiteRookMoved.legalMoves.filter(move => move.origin == E1 && move.dest == C1).isEmpty)
+	}
+
+	test("castle forbidden when king is check") {
+		val board = fromEmpty(List((Piece(White, King), E1),
+									(Piece(White, Rook), A1),
+									(Piece(White, Rook), H1),
+									(Piece(Black, Queen), E8)))
+
+		checkMove(board, E1, Set(D1, D2, F1, F2))
+	}
+
+	test("get king out of check") {
+		val board = fromEmpty(List((Piece(White, King), E1),
+									(Piece(Black, Rook), A1),
+									(Piece(Black, Bishop), C3)))
+
+		checkMove(board, E1, Set(E2, F2))
+	}
+
+	test("do not put king in check") {
+		val board1 = fromEmpty(List((Piece(Black, King), E8),
+									(Piece(White, Queen), H7),
+									(Piece(White, Knight), G6)))
+
+		checkMove(board1, E8, Set(D8))
+
+		val board2 = fromEmpty(List((Piece(Black, King), E8),
+									(Piece(White, King), E6),
+									(Piece(White, Pawn), G7)))
+
+		checkMove(board1, E8, Set(D8))
+	}
+
+	test("put piece in between to stop check") {
+		val board = fromEmpty(List((Piece(Black, King), E8),
+									(Piece(Black, Knight), F7),
+									(Piece(White, Queen), A8),
+									(Piece(White, King), E6)))
+
+		val list = new Moves(board, History(), Black).legalMoves
+
+		assert(list.size === 1)
+		assert(list.head.piece === Piece(Black, Knight))
+		assert(list.head.origin === F7)
+		assert(list.head.dest === D8)
+	}
+
+	test("game status draw") {
+		val board = fromEmpty(List((Piece(Black, King), E8),
+									(Piece(White, Rook), A7),
+									(Piece(White, Bishop), H4),
+									(Piece(White, Knight), H7)))
+
+		val game = new Moves(board, History(), Black)
+
+		assert(game.kingInCheck === false)
+		assert(game.legalMoves.isEmpty)
+		assert(game.gameStatus === Some(Draw))
+	}
+
+	test("game status mate") {
+		val board = fromEmpty(List((Piece(White, King), E1),
+									(Piece(Black, Rook), A1),
+									(Piece(Black, Rook), A2)))
+
+		val game = new Moves(board, History(), White)
+
+		assert(game.kingInCheck === true)
+		assert(game.legalMoves.isEmpty)
+		assert(game.gameStatus === Some(Mate))
 	}
 
 }
