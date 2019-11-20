@@ -51,4 +51,9 @@ class PosTest extends FunSuite {
 		checkPath(D4, D6, 2)
 	}
 
+	test("index by key") {
+		assert(Pos.posAt("a1") === Some(A1))
+		assert(Pos.posAt("q9") === None)
+	}
+
 }

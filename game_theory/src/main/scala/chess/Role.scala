@@ -1,50 +1,53 @@
 package chess
 
 import chess._
+import Pos.posAt
 
 
 sealed trait Role {
 
 	val forsyth: Char
-	val forsythUpper: Char = forsyth.toUpper
+	lazy val forsythUpper: Char = forsyth.toUpper
+	lazy val pgn: Char = forsythUpper
 
 	val dirs: Directions
 
 }
 
-case object King extends Role {
-	val forsyth = 'k'
 
+case object King extends Role {
+
+	val forsyth = 'k'
 	val dirs = Queen.dirs
 
 }
 
-case object Queen extends Role {
-	val forsyth = 'q'
 
+case object Queen extends Role {
+
+	val forsyth = 'q'
 	val dirs = Rook.dirs ::: Bishop.dirs
 
 }
 
-// Rook = Tour
-case object Rook extends Role {
-	val forsyth = 'r'
 
+case object Rook extends Role {
+
+	val forsyth = 'r'
 	val dirs = List(_.up, _.down, _.left, _.right)
 
 }
 
-// Bishop = Fou
-case object Bishop extends Role {
-	val forsyth = 'b'
 
+case object Bishop extends Role {
+
+	val forsyth = 'b'
 	val dirs = List(_.upLeft, _.upRight, _.downLeft, _.downRight)
 
 }
 
-// Knight = Cavalier
+
 case object Knight extends Role {
-	import Pos.posAt
 
 	val forsyth = 'n'
 
@@ -61,15 +64,19 @@ case object Knight extends Role {
 
 }
 
-// Pawn = Pion
+
 case object Pawn extends Role {
+
 	val forsyth = 'p'
-	
 	val dirs = Nil
 
 }
 
+
 object Role {
+
 	val all: List[Role] = List(King, Queen, Rook, Bishop, Knight, Pawn)
+
+	val allByPgn: Map[Char, Role] = all.map(role => role.pgn -> role).toMap
 
 }

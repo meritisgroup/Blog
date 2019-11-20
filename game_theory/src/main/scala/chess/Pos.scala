@@ -41,9 +41,14 @@ sealed case class Pos private (x: Int, y: Int) {
 		}
 	}
 
+	val file = (96 + x).toChar.toString
+	val rank = y.toString
+	val key = file + rank
+
 	override val hashCode = 8 * (y - 1) + (x - 1)
 
 }
+
 
 object Pos {
 
@@ -52,6 +57,10 @@ object Pos {
 	def posAt(x: Int, y: Int): Option[Pos] = {
 		if (x < 1 || x > 8 || y < 1 || y > 8) None
 		else posCache(x + 8 * y - 9)
+	}
+
+	def posAt(key: String): Option[Pos] = {
+		allByKeys.get(key)
 	}
 
 	def distance2(from: Pos, to: Pos): Int = {
@@ -140,6 +149,8 @@ object Pos {
 	val G8 = createPos(7, 8)
 	val H8 = createPos(8, 8)
 
-	val all = posCache.toList.flatten
+	val all: List[Pos] = posCache.toList.flatten
+
+	val allByKeys: Map[String, Pos] = all.map(pos => pos.key -> pos).toMap
 
 }
