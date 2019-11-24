@@ -1,13 +1,14 @@
 package chess
 
 import org.scalatest.FunSuite
+import chess._
 import Pos._
 
 
 class MasterGameTest extends FunSuite {
 	
 	test("load master games resource") {
-		assert(!MasterGame.loadPgnResource(MasterGame.pgnResource).isEmpty)
+		assert(!MasterGame.loadPgnResource(MasterGame.smallNbOfGames).isEmpty)
 	}
 
 	test("simple move") {
@@ -163,18 +164,11 @@ class MasterGameTest extends FunSuite {
 		assert(game.desc === "Hulk vs Spiderman @ Marvel")
 	}
 
-	test("check all games from resource") {
-		val pgn = MasterGame.loadPgnResource(MasterGame.pgnResource)
-
-		assert(!pgn.isEmpty)
-
-		val strGames = PgnParser.parseMultipleGames(pgn.get)
-
-		assert(!strGames.isEmpty)
+	def checkGames(strGames: List[(PgnTags, PgnMoves)]) {
 
 		val errors = new StringBuilder()
 
-		for (strGame <- strGames.get) {
+		for (strGame <- strGames) {
 			val tags = strGame._1
 			val strMoves = strGame._2
 
@@ -191,6 +185,26 @@ class MasterGameTest extends FunSuite {
 		}
 
 		if (!errors.isEmpty) fail(errors.toString)
+	}
+
+	test("check all games from small resource") {
+		val pgn = MasterGame.loadPgnResource(MasterGame.smallNbOfGames)
+		assert(!pgn.isEmpty)
+
+		val strGames = PgnParser.parseMultipleGames(pgn.get)
+		assert(!strGames.isEmpty)
+
+		checkGames(strGames.get)
+	}
+
+	test("check all games from large resource") {
+		val pgn = MasterGame.loadPgnResource(MasterGame.largeNbOfGames)
+		assert(!pgn.isEmpty)
+
+		val strGames = PgnParser.parseMultipleGames(pgn.get)
+		assert(!strGames.isEmpty)
+
+		checkGames(strGames.get)
 	}
 
 }

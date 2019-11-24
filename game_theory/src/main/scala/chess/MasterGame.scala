@@ -10,7 +10,7 @@ case class MasterGame(moves: List[Move], gameStatus: Option[Status], winner: Opt
 
 class MoveParser(state: Moves) extends RegexParsers {
 
-	val nextAvailable: List[Move] = state.legalMoves
+	val nextAvailable: Iterable[Move] = state.legalMoves
 
 	val sideToPlay = state.sideToPlay
 
@@ -34,12 +34,12 @@ class MoveParser(state: Moves) extends RegexParsers {
 		}
 	}
 
-	val shortCastle: Parser[Option[Move]] = ("O-O" | "o-o" | "0-0") ^^^ {
+	val shortCastle: Parser[Option[Move]] = ("O-O+" | "o-o+" | "0-0+" | "O-O" | "o-o" | "0-0") ^^^ {
 		val dest = if (sideToPlay == White) G1 else G8
 		filter(dest, Some(King))
 	}
 
-	val longCastle: Parser[Option[Move]] = ("O-O-O" | "o-o-o" | "0-0-0") ^^^ {
+	val longCastle: Parser[Option[Move]] = ("O-O-O+" | "o-o-o+" | "0-0-0+" | "O-O-O" | "o-o-o" | "0-0-0") ^^^ {
 		val dest = if (sideToPlay == White) C1 else C8
 		filter(dest, Some(King))
 	}
@@ -72,11 +72,11 @@ class MoveParser(state: Moves) extends RegexParsers {
 
 object MasterGame {
 
-	val pgnResource = "Kasparov.pgn"
-	//val pgnResource = "master_games.pgn"
+	val smallNbOfGames = "master_games.pgn"
+	val largeNbOfGames = "Kasparov.pgn"
 
-	def loadAllGames: List[MasterGame] = {
-		val pgn = loadPgnResource(pgnResource)
+	def loadAllGames(resName: String): List[MasterGame] = {
+		val pgn = loadPgnResource(resName)
 
 		if (pgn.isEmpty) {
 			Nil

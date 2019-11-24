@@ -1,13 +1,10 @@
 package chess
 
 import scala.util.parsing.combinator._
+import chess._
 
 
 object PgnParser extends RegexParsers {
-
-	type PgnTags = Map[String, String]
-
-	type PgnMoves = List[String]
 
 	val tagName: Parser[String] = "[" ~> """[a-zA-Z]+""".r
 
