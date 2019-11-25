@@ -78,6 +78,8 @@ case class Board(pieces: Map[Pos, Piece], hash: Long) {
 		ZobristHashChess.replace(acc, pos, pieces.get(pos), piece)
 	}
 
+	override def hashCode: Int = hash.hashCode
+
 }
 
 object Board {

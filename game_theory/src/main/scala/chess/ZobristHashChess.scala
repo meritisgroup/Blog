@@ -14,9 +14,18 @@ object ZobristHashChess {
 		Map(seq: _*)
 	}
 
-	final val zobrist2: Map[Color, Long] = {
-		val seq = for (side <- List(White, Black)) yield (side -> rand.nextLong())
-		Map(seq: _*)
+	final val whiteHash = rand.nextLong
+	final val blackHash = rand.nextLong
+
+	final val trueHash = rand.nextLong
+	final val falseHash = rand.nextLong
+
+	def colorZobrist(color: Color): Long = {
+		if (color == White) whiteHash else blackHash
+	}
+
+	def booleanZobrist(predicate: Boolean): Long = {
+		if (predicate) trueHash else falseHash
 	}
 
 	def computeHash(map: Map[Pos, Piece]): Long = {
@@ -29,7 +38,14 @@ object ZobristHashChess {
 	}
 
 	def addSide(prevHash: Long, side: Color): Long = {
-		prevHash ^ zobrist2(side)
+		prevHash ^ colorZobrist(side)
+	}
+
+	def addState(prevHash: Long, history: History, side: Color): Long = {
+		(prevHash ^ colorZobrist(side) ^ booleanZobrist(history.whiteShortCastlingAllowed)
+										 ^ booleanZobrist(history.whiteLongCastlingAllowed)
+										  ^ booleanZobrist(history.blackShortCastlingAllowed)
+										   ^ booleanZobrist(history.blackLongCastlingAllowed))
 	}
 
 }

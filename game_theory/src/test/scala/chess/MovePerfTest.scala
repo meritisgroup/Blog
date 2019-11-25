@@ -11,7 +11,7 @@ class MovePerfTest extends Bench.OnlineRegressionReport {
 	performance of "***** PERF TEST CHESS *****" in {
 		measure method "Average computation time of legal moves" in {
 			using(Gen.unit("board")) in {
-				Unit => for (move <- moves) yield new Moves(move.after, move.afterHistory, !move.piece.color).legalMoves
+				Unit => for (move <- moves) yield new RulesEngine(move.after).legalMoves
 			}
 		}
 	}

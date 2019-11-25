@@ -16,7 +16,7 @@ class MasterGameTest extends FunSuite {
 
 		assert(!moves.isEmpty)
 
-		val board = moves.head.after
+		val board = moves.head.after.board
 
 		assert(!board.contains(D2))
 		assert(board.pieces(D4) === Piece(White, Pawn))
@@ -27,7 +27,7 @@ class MasterGameTest extends FunSuite {
 
 		assert(!moves.isEmpty)
 
-		val board = moves.head.after
+		val board = moves.head.after.board
 
 		assert(board.pieces(C3) === Piece(White, Pawn))
 	}
@@ -37,7 +37,7 @@ class MasterGameTest extends FunSuite {
 
 		assert(moves.size == 2)
 
-		val board = moves.last.after
+		val board = moves.last.after.board
 
 		assert(!board.contains(G1))
 		assert(board.pieces(F3) === Piece(White, Knight))
@@ -50,7 +50,7 @@ class MasterGameTest extends FunSuite {
 
 		assert(moves.size == 3)
 
-		val board = moves.last.after
+		val board = moves.last.after.board
 
 		assert(!board.contains(G1))
 		assert(!board.contains(F3))
@@ -127,7 +127,7 @@ class MasterGameTest extends FunSuite {
 		assert(moves.size === list.size,
 				"failed to parse move : " + list(List(moves.size, list.size-1).min))
 
-		val state = new Moves(moves.last.after, moves.last.afterHistory, Black)
+		val state = new RulesEngine(moves.last.after)
 
 		assert(state.gameStatus === Some(Mate))
 	}
@@ -145,7 +145,7 @@ class MasterGameTest extends FunSuite {
 		assert(moves.size === completeGame.size,
 			"failed to parse move : " + completeGame(List(moves.size, completeGame.size-1).min))
 
-		val state = new Moves(moves.last.after, moves.last.afterHistory, Black)
+		val state = new RulesEngine(moves.last.after)
 
 		assert(state.gameStatus === Some(Mate))
 	}
@@ -165,7 +165,6 @@ class MasterGameTest extends FunSuite {
 	}
 
 	def checkGames(strGames: List[(PgnTags, PgnMoves)]) {
-
 		val errors = new StringBuilder()
 
 		for (strGame <- strGames) {

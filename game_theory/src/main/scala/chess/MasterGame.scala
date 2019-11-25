@@ -8,11 +8,11 @@ import Pos._
 case class MasterGame(moves: List[Move], gameStatus: Option[Status], winner: Option[Color], desc: String)
 
 
-class MoveParser(state: Moves) extends RegexParsers {
+class MoveParser(engine: RulesEngine) extends RegexParsers {
 
-	val nextAvailable: Iterable[Move] = state.legalMoves
+	val nextAvailable: Iterable[Move] = engine.nextMoves
 
-	val sideToPlay = state.sideToPlay
+	val sideToPlay = engine.state.sideToPlay
 
 	def filter(dest: Pos, role: Option[Role] = None, file: String = "", rank: String = ""): Option[Move] = {
 		def filterRole(move: Move): Boolean = role.isEmpty || (move.piece.role == role.get)
@@ -95,16 +95,10 @@ object MasterGame {
 		}
 	}
 
-	def fromLastMove(last: Move): Moves = {
-		new Moves(last.after, last.afterHistory, !last.piece.color)
-	}
-
-	val initialMoves = new Moves(Board.init, History(), White)
-
 	def buildMoves(nextStr: List[String], previous: List[Move] = Nil): List[Move] = nextStr match {
 		case str :: tail => {
-			val moves = if (previous.isEmpty) initialMoves else fromLastMove(previous.head)
-			val next = new MoveParser(moves)(str)
+			val state = if (previous.isEmpty) State.init else previous.head.after
+			val next = new MoveParser(new RulesEngine(state))(str)
 
 			if (next.isEmpty) previous.reverse
 			else buildMoves(tail, next.get :: previous)
@@ -121,7 +115,7 @@ object MasterGame {
 
 		} else {
 			val lastMove = moves.last
-			val gameStatus = fromLastMove(lastMove).gameStatus
+			val gameStatus = new RulesEngine(lastMove.after).gameStatus
 			val winner = if (gameStatus == Some(Mate)) Some(lastMove.piece.color) else None
 			val desc = tags("White") + " vs " + tags("Black") + " @ " + tags("Event")
 
