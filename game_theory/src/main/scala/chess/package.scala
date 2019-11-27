@@ -9,4 +9,6 @@ package object chess {
 	type PgnTags = Map[String, String]
 	type PgnMoves = List[String]
 	
+	type StateExpand = (State => List[State])
+
 }
