@@ -7,19 +7,17 @@ import Pos._
 
 class RulesEngine(val state: State) {
 
-	lazy val nextMoves: Iterable[Move] = legalMoves
+	lazy val nextMoves: List[Move] = legalMoves
 	lazy val gameStatus: Option[Status] = computeStatus
 
-	val currentBoard = state.board
-	val currentHistory = state.history
-	val sideToPlay = state.sideToPlay
-	val opponentSide = !state.sideToPlay
+	val currentBoard: Board = state.board
+	val currentHistory: History = state.history
+	val sideToPlay: Color = state.sideToPlay
+	val opponentSide: Color = !sideToPlay
 
-	val kingInCheck: Boolean = kingThreatened(state.board)
+	val kingPos: Option[Pos] = currentBoard.find((pos, piece) => piece.role == King && piece.color == sideToPlay)
 
-	val oppositeColor: Map[Pos, Boolean] = state.board.pieces.filter(_._2.color != sideToPlay)
-															.map(_._1 -> true).toMap
-															.withDefaultValue(false)
+	val kingInCheck: Boolean = kingThreatened
 
 	def computeStatus: Option[Status] = {
 		if (!nextMoves.isEmpty) None
@@ -27,20 +25,20 @@ class RulesEngine(val state: State) {
 		else Some(Draw)
 	}
 
-	def legalMoves: Iterable[Move] = {
-		currentBoard.pieces
-			.flatMap { case (pos, piece) => {
-				if (piece is opponentSide) Nil
-				else piece.role match {
-					case Bishop => longRange(piece, pos, Bishop.dirs)
-					case Knight => shortRange(piece, pos, Knight.dirs)
-					case Queen => longRange(piece, pos, Queen.dirs)
-					case Rook => longRange(piece, pos, Rook.dirs)
-					case Pawn => pawnMoves(piece, pos)
-					case King => shortRange(piece, pos, King.dirs) ++ castle(piece, pos)
-				}
-			}}
-			.filter(move => !kingThreatened(move.after.board))
+	def legalMoves: List[Move] = {
+		def rec(pos: Pos, piece: Piece): List[Move] = {
+			if (piece is opponentSide) Nil
+			else piece.role match {
+				case Bishop => longRange(piece, pos, Bishop.dirs)
+				case Knight => shortRange(piece, pos, Knight.dirs)
+				case Queen => longRange(piece, pos, Queen.dirs)
+				case Rook => longRange(piece, pos, Rook.dirs)
+				case Pawn => pawnMoves(piece, pos)
+				case King => shortRange(piece, pos, King.dirs) ++ castle(piece, pos)
+			}
+		}
+
+		currentBoard.flatMap(rec).filter(move => !kingThreatened(move))
 	}
 
 	def longRange(piece: Piece, pos: Pos, dirs: Directions): List[Move] = {
@@ -58,7 +56,7 @@ class RulesEngine(val state: State) {
 						case _ => list
 					}
 
-				} else if (oppositeColor(to)) {
+				} else if (currentBoard.color(to).get == opponentSide) {
 					currentBoard.take(pos, to).map(after => Move(state, State(after, nextHistory, opponentSide), piece, pos, to)) match {
 						case Some(move) => move :: list
 						case _ => list
@@ -83,10 +81,10 @@ class RulesEngine(val state: State) {
 		dirs flatMap { dir =>
 			dir(pos) match {
 				case Some(to) => {
-					if (!state.board.contains(to)) {
+					if (!currentBoard.contains(to)) {
 						currentBoard.move(pos, to).map(after => Move(state, State(after, nextHistory, opponentSide), piece, pos, to))
 
-					} else if (oppositeColor(to)) {
+					} else if (currentBoard.color(to).get == opponentSide) {
 						currentBoard.take(pos, to).map(after => Move(state, State(after, nextHistory, opponentSide), piece, pos, to))
 
 					} else {
@@ -133,7 +131,7 @@ class RulesEngine(val state: State) {
 		}
 
 		def takeCross(dir: Direction): Option[Move] = dir(pos) match {
-			case Some(to) if currentBoard.contains(to) && oppositeColor(to) =>
+			case Some(to) if currentBoard.contains(to) && (currentBoard.color(to).get == opponentSide) =>
 				currentBoard.take(pos, to) map { after =>
 					Move(state, State(promote(to, after), currentHistory.resetEnPassant, opponentSide), piece, pos, to)
 				}
@@ -199,21 +197,31 @@ class RulesEngine(val state: State) {
 		else List(shortCastle, longCastle).flatten
 	}
 
-	def kingThreatened(board: Board): Boolean = {
-		board.findKingPos(sideToPlay).exists(kingPos => posThreatened(board, kingPos))
+	def kingThreatened: Boolean = {
+		kingPos.exists(kp => posThreatened(currentBoard, kp))
+	}
+
+	def kingThreatened(move: Move): Boolean = {
+		val nextKingPos = move.piece.role match {
+			case King => Some(move.dest)
+			case _ => kingPos
+		}
+		nextKingPos.exists(kp => posThreatened(move.after.board, kp))
 	}
 
 	def posThreatened(board: Board, ref: Pos): Boolean = {
-		def pieceThreatenRef(pos: Pos, piece: Piece): Boolean = piece.role match {
-			case King => Pos.distance2(pos, ref) <= 2
-			case Bishop => ref.onSameDiagonal(pos) && Pos.checkAll(pos, ref, pos => board.contains(pos))
-			case Rook => ref.onSameLine(pos) && Pos.checkAll(pos, ref, pos => board.contains(pos))
-			case Queen => (ref.onSameLine(pos) || ref.onSameDiagonal(pos)) && Pos.checkAll(pos, ref, pos => board.contains(pos))
-			case Knight => Pos.distance2(pos, ref) == 5
-			case Pawn => Pos.distance2(pos, ref) == 2 && piece.pawnTakingDirs.exists(dir => dir(pos) == Some(ref))
+		def pieceThreatenRef(pos: Pos, piece: Piece): Boolean = {
+			(piece is opponentSide) && (piece.role match {
+				case King => Pos.distance2(pos, ref) <= 2
+				case Bishop => ref.onSameDiagonal(pos) && Pos.checkAll(pos, ref, pos => board.contains(pos))
+				case Rook => ref.onSameLine(pos) && Pos.checkAll(pos, ref, pos => board.contains(pos))
+				case Queen => (ref.onSameLine(pos) || ref.onSameDiagonal(pos)) && Pos.checkAll(pos, ref, pos => board.contains(pos))
+				case Knight => Pos.distance2(pos, ref) == 5
+				case Pawn => Pos.distance2(pos, ref) == 2 && piece.pawnTakingDirs.exists(dir => dir(pos) == Some(ref))
+			})
 		}
 
-		board.pieces.exists(elt => (elt._2 is opponentSide) && pieceThreatenRef(elt._1, elt._2))
+		board.exists(pieceThreatenRef)
 	}
 
 }

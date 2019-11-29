@@ -3,105 +3,133 @@ package chess
 import Pos.posAt
 
 
-case class Board(pieces: Map[Pos, Piece], hash: Long) {
+case class Board(pieces: Array[Option[Piece]], hash: Long) {
 
-	def apply(at: Pos): Option[Piece] = pieces get at
+	def apply(at: Pos): Option[Piece] = pieces(at.hashCode)
 
-	def apply(x: Int, y: Int): Option[Piece] = posAt(x, y) flatMap pieces.get
+	def apply(x: Int, y: Int): Option[Piece] = posAt(x, y).flatMap(at => apply(at))
 
-	def contains(at: Pos): Boolean = pieces contains at
+	def color(at: Pos): Option[Color] = pieces(at.hashCode).map(_.color)
 
-	lazy val kingPos: Map[Color, Pos] = pieces.collect {
-		case (pos, Piece(color, King)) => color -> pos
+	def contains(at: Pos): Boolean = !pieces(at.hashCode).isEmpty
+
+	def exists(predicate: (Pos, Piece) => Boolean): Boolean = {
+		Board.index.exists(i => !pieces(i).isEmpty && predicate(Pos.posAt(i).get, pieces(i).get))
 	}
 
-	def findKingPos(color: Color): Option[Pos] = kingPos get color
+	def find(predicate: (Pos, Piece) => Boolean): Option[Pos] = {
+		Board.index.find(i => !pieces(i).isEmpty && predicate(Pos.posAt(i).get, pieces(i).get))
+			.flatMap(i => Pos.posAt(i))
+	}
+
+	def flatMap[K](fct: (Pos, Piece) => List[K]): List[K] = {
+		Board.index.flatMap(i => {
+			if (pieces(i).isEmpty) Nil
+			else fct(Pos.posAt(i).get, pieces(i).get)
+		})
+	}
 
 	def place(piece: Piece, at: Pos): Option[Board] = {
-		if (pieces contains at) None
-		else Some(copy(pieces = pieces + ((at, piece)),
-						hash = updateHash(hash, at, Some(piece))))
+		if (contains(at)) None
+		else Some(Board(pieces.updated(at.hashCode, Some(piece)),
+						updateHash(hash, at, Some(piece))))
 	}
 
 	def replace(piece: Piece, at: Pos): Option[Board] = {
-		if (!(pieces contains at)) None
-		else Some(copy(pieces = pieces + ((at, piece)),
-						hash = updateHash(hash, at, Some(piece))))
+		if (!contains(at)) None
+		else Some(Board(pieces.updated(at.hashCode, Some(piece)),
+						updateHash(hash, at, Some(piece))))
 	}
 
 	def remove(at: Pos): Option[Board] = {
-		pieces get at map { piece =>
-			copy(pieces = pieces - at,
-					hash = updateHash(hash, at, None))
-		}
+		if (!contains(at)) None
+		else Some(Board(pieces.updated(at.hashCode, None),
+						updateHash(hash, at, None)))
 	}
 
 	def move(orig: Pos, dest: Pos): Option[Board] = {
-		if (pieces contains dest) None
-		else pieces get orig map { piece =>
-			copy(pieces = pieces - orig + ((dest, piece)),
-					hash = { 
+		if (!contains(orig) || contains(dest)) None
+		else {
+			val cloneArray = pieces.clone
+			cloneArray(dest.hashCode) = cloneArray(orig.hashCode)
+			cloneArray(orig.hashCode) = None
+
+			Some(Board(cloneArray,
+					{ 
 						val hash1 = updateHash(hash, orig, None)
-						updateHash(hash1, dest, Some(piece))
-					} )
+						updateHash(hash1, dest, cloneArray(dest.hashCode))
+					} ))
 		}
 	}
 
 	def take(orig: Pos, dest: Pos): Option[Board] = {
-		if ((pieces contains dest) && (pieces contains orig)) {
-			pieces get orig map { piece =>
-				copy(pieces = pieces - orig + ((dest, piece)),
-						hash = {
-							val hash1 = updateHash(hash, orig, None)
-							updateHash(hash1, dest, Some(piece))
-						} )
-			}
+		if (!contains(orig) || !contains(dest)) None
+		else {
+			val cloneArray = pieces.clone
+			cloneArray(dest.hashCode) = cloneArray(orig.hashCode)
+			cloneArray(orig.hashCode) = None
 
-		} else None
+			Some(Board(cloneArray,
+					{ 
+						val hash1 = updateHash(hash, orig, None)
+						updateHash(hash1, dest, cloneArray(dest.hashCode))
+					} ))
+		}
 	}
 
 	def take(orig: Pos, dest: Pos, taken: Pos): Option[Board] = {
-		if ((pieces contains taken) && !(pieces contains dest) && (pieces contains orig)) {
-			pieces get orig map { piece =>
-				copy(pieces = pieces - orig - taken + ((dest, piece)),
-						hash = {
-							val hash1 = updateHash(hash, orig, None)
-							val hash2 = updateHash(hash1, taken, None)
-							updateHash(hash2, dest, Some(piece))
-						} )
-			}
+		if (!contains(orig) || contains(dest) || !contains(taken)) None
+		else {
+			val cloneArray = pieces.clone
+			cloneArray(dest.hashCode) = cloneArray(orig.hashCode)
+			cloneArray(orig.hashCode) = None
+			cloneArray(taken.hashCode) = None
 
-		} else None
+			Some(Board(cloneArray,
+					{ 
+						val hash1 = updateHash(hash, orig, None)
+						val hash2 = updateHash(hash1, taken, None)
+						updateHash(hash2, dest, cloneArray(dest.hashCode))
+					} ))
+		}
 	}
 
 	def updateHash(acc: Long, pos: Pos, piece: Option[Piece]): Long = {
-		ZobristHashChess.replace(acc, pos, pieces.get(pos), piece)
+		ZobristHashChess.replace(acc, pos, apply(pos), piece)
 	}
 
-	override def hashCode: Int = hash.hashCode
+	override val hashCode: Int = hash.hashCode
+
+	override def equals(obj: Any) = obj match {
+		case board: Board => pieces.sameElements(board.pieces) && (hash == board.hash)
+		case _ => false
+	}
 
 }
+
 
 object Board {
 
 	def init: Board = {
 		val backRank = List(Rook, Knight, Bishop, Queen, King, Bishop, Knight, Rook)
+		val array = Array.fill[Option[Piece]](64)(None)
 
-		val items = for (y <- Seq(1, 2, 7, 8); x <- 1 to 8)
-					yield (posAt(x, y) map { pos => y match {
-						case 1 => (pos, Piece(White, backRank(x-1)))
-						case 2 => (pos, Piece(White, Pawn))
-						case 7 => (pos, Piece(Black, Pawn))
-						case 8 => (pos, Piece(Black, backRank(x-1)))
-					}})
+		for (y <- Seq(1, 2, 7, 8); x <- 1 to 8)
+			yield (posAt(x, y) map { pos => y match {
+				case 1 => array(pos.hashCode) = Some(Piece(White, backRank(x-1)))
+				case 2 => array(pos.hashCode) = Some(Piece(White, Pawn))
+				case 7 => array(pos.hashCode) = Some(Piece(Black, Pawn))
+				case 8 => array(pos.hashCode) = Some(Piece(Black, backRank(x-1)))
+			}})
 
-		val map = items.flatten.toMap
-		Board(map, ZobristHashChess.computeHash(map))
+		Board(array, ZobristHashChess.computeHash(array))
 	}
 
 	def empty: Board = {
-		val map = Map.empty[Pos, Piece]
-		Board(map, ZobristHashChess.computeHash(map))
+		val array = Array.fill[Option[Piece]](64)(None)
+		Board(array, ZobristHashChess.computeHash(array))
 	}
+
+	val index = (0 until 64).toList
 
 }

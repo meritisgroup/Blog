@@ -63,6 +63,11 @@ object Pos {
 		allByKeys.get(key)
 	}
 
+	def posAt(index: Int): Option[Pos] = {
+		if (index < 0 || index >= posCache.size) None
+		else posCache(index)
+	}
+
 	def distance2(from: Pos, to: Pos): Int = {
 		(from.x - to.x) * (from.x - to.x) + (from.y - to.y) * (from.y - to.y)
 	}

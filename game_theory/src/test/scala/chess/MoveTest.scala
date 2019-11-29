@@ -44,7 +44,7 @@ class MoveTest extends FunSuite {
 	}
 
 	def count(board: Board, color: Color): Int = {
-		board.pieces.values.filter(_.is(color)).size
+		Pos.all.filter(pos => board.color(pos) == Some(color)).size
 	}
 
 	def checkMove(board: Board, origin: Pos, refs: Set[Pos]) {
@@ -172,7 +172,7 @@ class MoveTest extends FunSuite {
 		checkTake(board, D5, E4)
 	}
 
-	test("pawn promotion") {
+	test("pawn promotion into queen") {
 		val piece = Piece(White, Pawn)
 
 		val board = fromEmpty(piece, D7)
@@ -187,6 +187,26 @@ class MoveTest extends FunSuite {
 		assert(move.origin === D7)
 		assert(move.dest === D8)
 		assert(move.after.board(D8) === Some(Piece(White, Queen)))
+	}
+
+	test("pawn promotion into all kinds of roles") {
+		val piece = Piece(White, Pawn)
+
+		val board = fromEmpty(piece, D7)
+
+		val list = new RulesEngine(State(board, History(), piece.color)).legalMoves
+
+		assert(list.size === 4)
+
+		val move = list.head
+
+		assert(list.map(_.piece).toSet === Set(piece))
+		assert(list.map(_.origin).toSet === Set(D7))
+		assert(list.map(_.dest).toSet === Set(D8))
+		assert(list.map(move => move.after.board(move.dest)).toSet === Set(Some(Piece(White, Queen)),
+																		Some(Piece(White, Rook)),
+																		Some(Piece(White, Bishop)),
+																		Some(Piece(White, Knight))))
 	}
 
 	test("prise en passant - black side") {

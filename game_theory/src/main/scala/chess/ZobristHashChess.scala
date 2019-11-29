@@ -28,8 +28,8 @@ object ZobristHashChess {
 		if (predicate) trueHash else falseHash
 	}
 
-	def computeHash(map: Map[Pos, Piece]): Long = {
-		val longs = for (pos <- Pos.all) yield zobrist((pos, map.get(pos)))
+	def computeHash(array: Array[Option[Piece]]): Long = {
+		val longs = for (pos <- Pos.all) yield zobrist((pos, array(pos.hashCode)))
 		longs.foldLeft(0L) { (acc, elt) => acc ^ elt }
 	}
 

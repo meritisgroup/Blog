@@ -19,7 +19,7 @@ class MasterGameTest extends FunSuite {
 		val board = moves.head.after.board
 
 		assert(!board.contains(D2))
-		assert(board.pieces(D4) === Piece(White, Pawn))
+		assert(board(D4) === Some(Piece(White, Pawn)))
 	}
 
 	test("default piece to move is pawn") {
@@ -29,7 +29,7 @@ class MasterGameTest extends FunSuite {
 
 		val board = moves.head.after.board
 
-		assert(board.pieces(C3) === Piece(White, Pawn))
+		assert(board(C3) === Some(Piece(White, Pawn)))
 	}
 
 	test("moves with role") {
@@ -40,9 +40,9 @@ class MasterGameTest extends FunSuite {
 		val board = moves.last.after.board
 
 		assert(!board.contains(G1))
-		assert(board.pieces(F3) === Piece(White, Knight))
+		assert(board(F3) === Some(Piece(White, Knight)))
 		assert(!board.contains(G7))
-		assert(board.pieces(G5) === Piece(Black, Pawn))
+		assert(board(G5) === Some(Piece(Black, Pawn)))
 	}
 
 	test("moves with take") {
@@ -55,7 +55,7 @@ class MasterGameTest extends FunSuite {
 		assert(!board.contains(G1))
 		assert(!board.contains(F3))
 		assert(!board.contains(G7))
-		assert(board.pieces(G5) === Piece(White, Knight))
+		assert(board(G5) === Some(Piece(White, Knight)))
 	}
 
 	test("move with origin") {

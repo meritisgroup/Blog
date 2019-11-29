@@ -53,4 +53,11 @@ class ZobristHashChessTest extends FunSuite {
 		assert(nextBoard.hash === ZobristHashChess.computeHash(nextBoard.pieces))
 	}
 
+	test("en passant hash code") {
+		val state1 = State.init
+		val state2 = State(state1.board, state1.history.copy(enPassant = Some(Pos.A4)), state1.sideToPlay)
+
+		assert(state1.hash != state2.hash)
+	}
+
 }

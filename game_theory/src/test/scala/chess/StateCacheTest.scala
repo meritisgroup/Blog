@@ -23,13 +23,13 @@ class StateCacheTest extends FunSuite {
 											StateCache.javaConcurrentMap(noCache))
 
 		val state = State.init
-		val ref = noCache(state)
+		val ref = noCache(state).toSet
 		noCacheCount.set(0)
 
-		for (cache <- caches) assert(cache(state) === ref)
+		for (cache <- caches) assert(cache(state).toSet === ref)
 		assert(noCacheCount.get === caches.size)
 
-		for (cache <- caches) assert(cache(state) === ref)
+		for (cache <- caches) assert(cache(state).toSet === ref)
 		assert(noCacheCount.get === caches.size)
 	}
 
